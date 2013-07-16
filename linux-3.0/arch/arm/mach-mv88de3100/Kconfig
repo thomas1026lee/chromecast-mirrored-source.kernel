@@ -1,0 +1,445 @@
+if ARCH_MV88DE3100
+
+config MACH_MV88DE3100
+	bool "Machine Marvell MV88DE3100"
+	help
+	  Machine support for the Standard Marvell MV88DE3100
+choice
+	prompt "Select MV88DE3100 processor family for target system"
+
+config ARCH_MV88DE3100_BG2
+	bool "BG2 family"
+	help
+	  Support for Marvell BG2 processors, based on the Marvell
+	  PJ4B CPU and the Marvell TAUROS3 L2 cache controller, or
+	  the ARM CortexA9 CPU and the ARM PL310 L2 cache controller
+
+config ARCH_MV88DE3100_BG3
+	bool "BG3 family"
+	help
+	  Support for Marvell BG3 processors, based on the ARM
+	  CortexA9MP CPU and the ARM PL310 L2 cache controller
+
+endchoice
+
+menu "MV88DE3100 features"
+
+menu "MV88DE3100 hardware platform"
+
+config MV88DE3100_PM_DISABLE_ETH
+	bool "Turn off Ethernet"
+	default n
+	help
+	  Turn off ethernet
+
+config MV88DE3100_PM_DISABLE_SDIO
+	bool "Turn off SDIO"
+	default n
+	help
+	  Turn off SDIO
+
+config MV88DE3100_PM_DISABLE_USB1
+	bool "Turn off USB1"
+	default n
+	help
+	  Turn off USB1
+
+config MV88DE3100_PM_DISABLE_SPI_TWSI
+	bool "Turn off SPI&TWSI"
+	default n
+	help
+	  Turn off SPI&TWSI
+
+config MV88DE3100_PM_DISABLE_1ST_SATA
+	bool "Disable 1st SATA port"
+	depends on SATA_AHCI_PLATFORM=n
+	default n
+	help
+	  Disable the 1st SATA port
+
+config MV88DE3100_PM_DISABLE_2ND_SATA
+	bool "Disable 2nd SATA port"
+	default n
+	help
+	  Disable the 2nd SATA port
+
+endmenu
+
+config MV88DE3100_CPU0MEM_START
+	hex "Physical start of CPU memory"
+	default 0x02400000
+	help
+	  The physical start of CPU memory, in bytes.
+
+config MV88DE3100_CPU0MEM_SIZE
+	hex "Physical size of CPU memory"
+	default 0x29800000
+	help
+	  The physical size of CPU memory, in bytes.
+
+config MV88DE3100_GPUMEM_FROM_SHM
+	bool "allocate GPU memory from SHM"
+	default y
+	help
+	  set to y to allocate GPU memory from SHM;
+	  if reserve GPU MEM in Linux kernel(MV88DE3100_GPUMEM_START,
+	  MV88DE3100_GPUMEM_SIZE),then set to n
+
+config MV88DE3100_GPUMEM_START
+	hex "Physical start of GPU memory"
+	depends on !MV88DE3100_GPUMEM_FROM_SHM
+	default 0x22400000
+	help
+	  The physical start of GPU memory, in bytes.
+
+config MV88DE3100_GPUMEM_SIZE
+	hex "Size of GPU memory"
+	depends on !MV88DE3100_GPUMEM_FROM_SHM
+	default 0x00000000
+	help
+	  Size of GPU memory, in bytes.
+
+config MV88DE3100_SHMMEM_START
+	hex "Physical start of cross-CPU shared memory"
+	default 0x22400000
+	help
+	  The physical start of cross-CPU shared memory, in bytes.
+
+config MV88DE3100_SHMMEM_SIZE
+	hex "Total size of cross-CPU shared memory"
+	default 0x1DC00000
+	help
+	  Total size of cross-CPU shared memory, in bytes,
+	  including cachable and non-cachable.
+
+config MV88DE3100_SHMMEM_CACHE_SIZE
+	hex "Size of cross-CPU cachable shared memory"
+	default 0x1BC00000
+	help
+	  Size of cross-CPU cachable shared memory, in bytes.
+
+config MV88DE3100_ASIC
+	bool "Support ASIC version"
+	default y
+	help
+	  Berlin has FPGA and ASIC version. Say Y to support ASIC version.
+
+choice
+	prompt "Choose Step Version"
+	default MV88DE3100_BG2_A0
+	depends on ARCH_MV88DE3100_BG2
+	help
+	  This option allows to select a SoC version.
+
+config MV88DE3100_BG2_Z1
+	bool "BG2 Z1"
+	select CPU_PJ4
+	select PJ4_INIT_UNUSED_NEONPIPE if NEON
+	help
+	  Z1 version.
+
+config MV88DE3100_BG2_Z2
+	bool "BG2 Z2"
+	select CPU_PJ4
+	select PJ4_INIT_UNUSED_NEONPIPE if NEON
+	help
+	  Z2 version.
+
+config MV88DE3100_BG2_A0
+	bool "BG2 A0 and A1"
+	select CPU_PJ4
+	help
+	  A0 and A1 version.
+
+config MV88DE3100_BG2_CD
+	bool "BG2 CD"
+	help
+	  BG2 CD version
+
+config MV88DE3100_BG2_CT
+	bool "BG2 CT"
+	help
+	  BG2 CT version
+endchoice
+
+endmenu
+
+
+menu "MV88DE3100 modules"
+
+config MV88DE3100_ETHERNET
+	tristate "Support 10/100Mbps Ethernet controller in Galois SoC"
+	default y
+	select MII
+	help
+	  If unsure, please say Yes here.
+
+config MV88DE3100_SM
+	tristate "Support SM CPU"
+	default y
+	help
+	  Say Y here to support SM(System Manager) which is designed for front
+	  panel control and power management.
+
+config MV88DE3100_IR
+	tristate "Support Infra-Red remote controller"
+	depends on MV88DE3100_SM
+	default y
+	help
+	  Say Y here to support Infra-Red remote controller
+
+config MV88DE3100_PINMUX
+	tristate "Support pinmux"
+	default y
+	help
+	  pinmux driver
+
+config MV88DE3100_SDHC
+	tristate "Support SDHC controller in Galois SoC"
+	depends on MMC_SDHCI
+	help
+	  SDHC support
+
+config MV88DE3100_SDHC_200
+	bool "Support SDIO controller 2.0 in Galois SoC"
+	depends on MMC_SDHCI && ! MV88DE3100_SDHC_300
+	default n
+	help
+	  SDHC support
+
+config MV88DE3100_SDHC_300
+	bool "Support SDIO controller 3.0 in Galois SoC"
+	depends on MMC_SDHCI
+	default y
+	help
+	  SDHC support
+
+config MV88DE3100_SDHC_INTERFACE0
+	bool "Support SDHC controller 0 in Galois SoC"
+	depends on MV88DE3100_SDHC
+	help
+		SDHC Interface0 support
+
+config MV88DE3100_SDHC_INTERFACE1
+	bool "Support SDHC controller 1 in Galois SoC"
+	depends on MV88DE3100_SDHC
+	help
+		SDHC Interface1 support
+
+config MV88DE3100_MMC_INTERFACE
+	bool "Support SDHC MMC controller in Galois SoC"
+	default n
+	depends on MV88DE3100_SDHC
+	help
+		MMC Interface support
+
+config MV88DE3100_UART0
+	bool "Enable UART0"
+	default y
+	help
+	  Set to y to set pinmux of UART signals and enable s/w driver.
+
+config MV88DE3100_PXA3XX_NFC
+	tristate "Support NAND Flash Controller (fork of pxa3xx_nand)"
+	default y
+	help
+	  A fork of mainline pxa3xx_nand.c. This NFC has no dedicated interrupt, but SoC
+	  contains a powerfull pbridge DMA engine whose interrupt can be enabled/disabled.
+	  So the driver could work in 3 modes: nonDMA, polling-DMA, interrupt-DMA.
+
+config MV88DE3100_NAND_RANDOMIZER
+	bool "Support software NAND randomizer"
+	default y
+	depends on MV88DE3100_PXA3XX_NFC
+	help
+	  To improve data stability for some large-capacity MLC(multipil-level cell) chips,
+	  data have to be randomized before storing into, or
+	  derandomized after reading out, from the physical cells.
+	  For chips that don't build in HW randomizer, SW randomizer is needed.
+	  Say Y here if you have no idea
+
+config MV88DE3100_USB_EHCI_HCD
+	bool "Support EHCI Host Controller for Berlin"
+	default y
+	select USB_ARCH_HAS_EHCI
+	help
+	  Driver for EHCI Host Controller.
+	  Need to enable USB and USB_EHCI_HCD to make driver work.
+
+config MV88DE3100_EHCI_USB0
+	bool "Support EHCI USB0 interface"
+	default n
+	depends on MV88DE3100_USB_EHCI_HCD
+	help
+	  Select y if you also want usb0 be enabled.
+
+config MV88DE3100_SPI
+	tristate "Support SPI bus"
+	default y
+	help
+	  SPI bus on Galois.
+
+config MV88DE3100_I2C
+	tristate "Support I2C bus"
+	default y
+	help
+	  I2C bus on Galois, I2C bus can operate on several modes(XD mode:-),
+	  User space must set these mode and i2c-bus config to kernel.
+
+config MV88DE3100_LINUX_I2C
+	tristate "Provide support to Linux I2C bus driver"
+	depends on MV88DE3100_I2C && I2C
+	help
+	  If you say yes to this option, besides traditional Galois I2C bus,
+	  the Galois I2C drivers will also be supported in Linux I2C bus.
+
+	  This I2C driver can also be configured as a kernel module.
+
+config MV88DE3100_SDIO_WLAN_8786
+	tristate "SDIO Wlan (IEEE802.11 B|G|N) driver for wlan8786 module"
+	default n
+	depends on MV88DE3100_SDHC
+	select WIRELESS_EXT
+	select WEXT_PRIV
+	select WEXT_SPY
+	help
+	  This is the wifi module for Berlin. Please try build it for module only.
+
+config MV88DE3100_SDIO_WLAN_8782
+	tristate "SDIO Wlan (IEEE802.11 A|B|G|N) driver for wlan8782 module"
+	default n
+	depends on MV88DE3100_SDHC
+	select WIRELESS_EXT
+	select WEXT_PRIV
+	select WEXT_SPY
+	help
+	  This is the wifi module for Berlin. Please try build it for module only.
+
+config MV88DE3100_SDIO_WLAN_8787
+	tristate "SDIO Wlan (IEEE802.11 A|B|G|N) driver for wlan8787 module"
+	default n
+	depends on MV88DE3100_SDHC
+	select WIRELESS_EXT
+	select WEXT_PRIV
+	select WEXT_SPY
+	help
+	  This is the wifi module for Berlin. Please try build it for module only.
+
+config MV88DE3100_SDIO_BT_8787
+	tristate "SDIO Bluetooth (BT 3.0 Class 1.5 & 2) driver for bt8787 module"
+	default n
+	depends on MV88DE3100_SDHC
+	select BT_HCIBTSDIO
+	select BT_MRVL
+	select BT_MRVL_SDIO
+	help
+	  This is the bluetooth module for Berlin. Please try build it for module only.
+
+config MV88DE3100_SDIO_WLAN_8797
+	tristate "SDIO Wlan (IEEE802.11 A|B|G|H|N) driver for wlan8797 module"
+	default n
+	depends on MV88DE3100_SDHC
+	select WIRELESS_EXT
+	select WEXT_PRIV
+	select WEXT_SPY
+	help
+	  This is the wifi module for Berlin. Please try build it for module only.
+
+config MV88DE3100_USB_WLAN_8782
+	tristate "USB Wlan (IEEE802.11 A|B|G|H|N) driver for wlan8782 module"
+	default n
+	depends on USB
+	select WIRELESS_EXT
+	select WEXT_PRIV
+	select WEXT_SPY
+	help
+	  This is the wifi module for Berlin. Please try build it for module only.
+
+config MV88DE3100_USB_WLAN_8797
+	tristate "USB Wlan (IEEE802.11 A|B|G|H|N) driver for wlan8797 module"
+	default n
+	depends on USB
+	select WIRELESS_EXT
+	select WEXT_PRIV
+	select WEXT_SPY
+	help
+	  This is the wifi module for Berlin. Please try build it for module only.
+
+config MV88DE3100_SHM
+	tristate "Support Shared Memory(SHM)"
+	default y
+	help
+	  Marvell MV88DE3100 BG2 Multimedia SoC is SMP based, this module
+	  implements the shared memory access. Say Y here if you want to
+	  compile it into Linux kernel, say M here to compile it as a module.
+
+config MV88DE3100_SHM_DEBUG
+	bool "Debug Shared memory(SHM) driver"
+	default n
+	depends on (MV88DE3100_SHM)
+	help
+	  Turn on SHM debug information output.
+
+config MV88DE3100_CC
+	tristate "Support Common Communication(CC) between CPUs"
+	default y
+	depends on (MV88DE3100_SHM)
+	help
+	  this module implements the interprocess communication scheme
+	  for MV88DE3100 Multimedia SoC. Say Y here if you want to
+	  compile it into Linux kernel, say M here to compile it as a module.
+
+config MV88DE3100_CC_DEBUG
+	bool "Debug Common Communication(CC) between CPUs"
+	default n
+	depends on (MV88DE3100_CC)
+	help
+	  Turn on CC debug information output.
+
+config MV88DE3100_PE_MODULE
+	tristate "Support PE Module (PEM)"
+	default m
+	help
+	  This module implements Presentation Engine.
+	  Say Y here if you want to compile it into Linux kernel,
+	  say M here to compile it as a module
+
+config MV88DE3100_GPU3D
+	tristate "SoC's 3d GPU support"
+	default m
+	help
+	  3D GPU support
+
+config MV88DE3100_GPU
+	tristate "SoC's 2d GPU support"
+	default m
+	help
+	  2D GPU support
+
+config MV88DE3100_PWM
+	tristate "Support PWM channels"
+	default n
+	help
+	  PWM channel support.
+
+config MV88DE3100_GPIO
+	tristate "Support GPIO port operations from user space"
+	default n
+	help
+	  Enable support for GPIO control from user space
+
+config MV88DE3100_FUSION
+	tristate "Marvell DirectFB Fusion Driver"
+	default n
+	help
+	  DirectFB Fusion support
+
+config MV88DE3100_FASTLOGO
+	tristate "Support Fast-Logo"
+	default n
+	help
+	  Enable support for Fast-Logo
+
+endmenu
+
+endif
