@@ -3,7 +3,7 @@
  *
  *  @brief This file contains the handling of CMD/EVENT in MLAN
  *
- *  Copyright (C) 2009-2011, Marvell International Ltd. 
+ *  Copyright (C) 2009-2011, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -12,7 +12,7 @@
  *  is available by writing to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA or on the
  *  worldwide web at http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
- *  
+ *
  *  THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
  *  IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
  *  ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
@@ -46,7 +46,7 @@ Change Log:
                 Local Functions
 ********************************************************/
 
-/** 
+/**
  *  @brief This function convert a given character to hex
  *
  *  @param chr        Character to be converted
@@ -107,8 +107,9 @@ wlan_parse_cal_cfg(t_u8 * src, t_size len, t_u8 * dst)
     dptr = dst;
 
     while (ptr - src < len) {
-        while (*ptr && (wlan_isspace(*ptr) || *ptr == '\t')) {
+        if (*ptr && (wlan_isspace(*ptr) || *ptr == '\t')) {
             ptr++;
+            continue;
         }
 
         if (wlan_isxdigit(*ptr)) {
@@ -122,9 +123,9 @@ wlan_parse_cal_cfg(t_u8 * src, t_size len, t_u8 * dst)
     return (dptr - dst);
 }
 
-/** 
+/**
  *  @brief This function initializes the command node.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param pcmd_node    A pointer to cmd_ctrl_node structure
  *  @param cmd_oid      Cmd oid: treated as sub command
@@ -165,10 +166,10 @@ wlan_init_cmd_node(IN pmlan_private pmpriv,
     LEAVE();
 }
 
-/** 
+/**
  *  @brief This function gets a free command node if available in
  *              command free queue.
- *  
+ *
  *  @param pmadapter        A pointer to mlan_adapter structure
  *
  *  @return cmd_ctrl_node   A pointer to cmd_ctrl_node structure or MNULL
@@ -203,9 +204,9 @@ wlan_get_cmd_node(mlan_adapter * pmadapter)
     return pcmd_node;
 }
 
-/** 
+/**
  *  @brief This function cleans command node.
- *  
+ *
  *  @param pmadapter    A pointer to mlan_adapter structure
  *  @param pcmd_node    A pointer to cmd_ctrl_node structure
  *
@@ -235,9 +236,9 @@ wlan_clean_cmd_node(pmlan_adapter pmadapter, cmd_ctrl_node * pcmd_node)
 }
 
 /**
- *  @brief This function will return the pointer to the first entry in 
+ *  @brief This function will return the pointer to the first entry in
  *  		pending cmd which matches the given pioctl_req
- *  
+ *
  *  @param pmadapter    A pointer to mlan_adapter
  *  @param pioctl_req   A pointer to mlan_ioctl_req buf
  *
@@ -261,7 +262,7 @@ wlan_get_pending_ioctl_cmd(pmlan_adapter pmadapter, pmlan_ioctl_req pioctl_req)
         return MNULL;
     }
     while (pcmd_node != (cmd_ctrl_node *) & pmadapter->cmd_pending_q) {
-        if (pcmd_node->pioctl_buf == pioctl_req) {
+        if (pcmd_node->pioctl_buf && (pcmd_node->pioctl_buf == pioctl_req)) {
             LEAVE();
             return pcmd_node;
         }
@@ -271,9 +272,49 @@ wlan_get_pending_ioctl_cmd(pmlan_adapter pmadapter, pmlan_ioctl_req pioctl_req)
     return MNULL;
 }
 
-/** 
+/**
+ *  @brief This function will return the pointer to the first entry in
+ *  		pending cmd which matches the given bss_index
+ *
+ *  @param pmadapter    A pointer to mlan_adapter
+ *  @param bss_index    bss_index
+ *
+ *  @return 	   A pointer to first entry match pioctl_req
+ */
+static cmd_ctrl_node *
+wlan_get_bss_pending_ioctl_cmd(pmlan_adapter pmadapter, t_u32 bss_index)
+{
+    cmd_ctrl_node *pcmd_node = MNULL;
+    mlan_ioctl_req *pioctl_buf = MNULL;
+    ENTER();
+
+    if (!
+        (pcmd_node =
+         (cmd_ctrl_node *) util_peek_list(pmadapter->pmoal_handle,
+                                          &pmadapter->cmd_pending_q,
+                                          pmadapter->callbacks.moal_spin_lock,
+                                          pmadapter->callbacks.
+                                          moal_spin_unlock))) {
+        LEAVE();
+        return MNULL;
+    }
+    while (pcmd_node != (cmd_ctrl_node *) & pmadapter->cmd_pending_q) {
+        if (pcmd_node->pioctl_buf) {
+            pioctl_buf = (mlan_ioctl_req *) pcmd_node->pioctl_buf;
+            if (pioctl_buf->bss_index == bss_index) {
+                LEAVE();
+                return pcmd_node;
+            }
+        }
+        pcmd_node = pcmd_node->pnext;
+    }
+    LEAVE();
+    return MNULL;
+}
+
+/**
  *  @brief This function handles the command response of host_cmd
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
  *  @param pioctl_buf   A pointer to mlan_ioctl_req structure
@@ -301,9 +342,9 @@ wlan_ret_host_cmd(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function sends host command to firmware.
- *  
+ *
  *  @param pmpriv     	A pointer to mlan_private structure
  *  @param cmd      	A pointer to HostCmd_DS_COMMAND structure
  *  @param pdata_buf	A pointer to data buffer
@@ -325,9 +366,9 @@ wlan_cmd_host_cmd(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function downloads a command to firmware.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param pcmd_node    A pointer to cmd_ctrl_node structure
  *
@@ -460,7 +501,7 @@ wlan_dnld_cmd_to_fw(IN mlan_private * pmpriv, IN cmd_ctrl_node * pcmd_node)
 
 /**
  *  @brief This function sends sleep confirm command to firmware.
- * 
+ *
  *  @param pmadapter  A pointer to mlan_adapter structure
  *
  *  @return        MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
@@ -540,9 +581,9 @@ wlan_dnld_sleep_confirm_cmd(mlan_adapter * pmadapter)
                 Global Functions
 ********************************************************/
 
-/** 
+/**
  *  @brief Event handler
- *  
+ *
  *  @param priv		A pointer to mlan_private structure
  *  @param event_id	Event ID
  *  @param pmevent	Event buffer
@@ -575,10 +616,10 @@ wlan_recv_event(pmlan_private priv, mlan_event_id event_id, t_void * pmevent)
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function allocates the command buffer and links
  *              it to command free queue.
- *  
+ *
  *  @param pmadapter    A pointer to mlan_adapter structure
  *
  *  @return             MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
@@ -633,7 +674,7 @@ wlan_alloc_cmd_buffer(IN mlan_adapter * pmadapter)
 
 /**
  *  @brief This function frees the command buffer.
- *  
+ *
  *  @param pmadapter    A pointer to mlan_adapter structure
  *
  *  @return             MLAN_STATUS_SUCCESS
@@ -679,9 +720,9 @@ wlan_free_cmd_buffer(IN mlan_adapter * pmadapter)
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles events generated by firmware
- *  
+ *
  *  @param pmadapter		A pointer to mlan_adapter structure
  *
  *  @return		MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
@@ -748,9 +789,9 @@ wlan_process_event(pmlan_adapter pmadapter)
     return ret;
 }
 
-/** 
+/**
  *  @brief This function requests a lock on command queue.
- *  
+ *
  *  @param pmadapter    A pointer to mlan_adapter structure
  *
  *  @return             N/A
@@ -769,9 +810,9 @@ wlan_request_cmd_lock(IN mlan_adapter * pmadapter)
     return;
 }
 
-/** 
+/**
  *  @brief This function releases a lock on command queue.
- *  
+ *
  *  @param pmadapter    A pointer to mlan_adapter structure
  *
  *  @return             N/A
@@ -790,9 +831,9 @@ wlan_release_cmd_lock(IN mlan_adapter * pmadapter)
     return;
 }
 
-/** 
+/**
  *  @brief This function prepare the command before sending to firmware.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd_no       Command number
  *  @param cmd_action   Command action: GET or SET
@@ -907,10 +948,10 @@ wlan_prepare_cmd(IN mlan_private * pmpriv,
     return ret;
 }
 
-/** 
+/**
  *  @brief This function inserts command node to cmd_free_q
  *              after cleaning it.
- *  
+ *
  *  @param pmadapter    A pointer to mlan_adapter structure
  *  @param pcmd_node    A pointer to cmd_ctrl_node structure
  *
@@ -947,9 +988,9 @@ wlan_insert_cmd_to_free_q(IN mlan_adapter * pmadapter,
     LEAVE();
 }
 
-/** 
+/**
  *  @brief This function queues the command to cmd list.
- *  
+ *
  *  @param pmadapter    A pointer to mlan_adapter structure
  *  @param pcmd_node    A pointer to cmd_ctrl_node structure
  *  @param add_tail      Specify if the cmd needs to be queued in the header or tail
@@ -1011,14 +1052,14 @@ wlan_insert_cmd_to_pending_q(IN mlan_adapter * pmadapter,
     return;
 }
 
-/** 
+/**
  *  @brief This function executes next command in command
  *      pending queue. It will put firmware back to PS mode
  *      if applicable.
- * 
+ *
  *  @param pmadapter     A pointer to mlan_adapter structure
  *
- *  @return             MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE 
+ *  @return             MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
  */
 mlan_status
 wlan_exec_next_cmd(mlan_adapter * pmadapter)
@@ -1093,9 +1134,9 @@ wlan_exec_next_cmd(mlan_adapter * pmadapter)
     return ret;
 }
 
-/** 
+/**
  *  @brief This function handles the command response
- *  
+ *
  *  @param pmadapter    A pointer to mlan_adapter structure
  *
  *  @return             MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
@@ -1255,7 +1296,8 @@ wlan_process_cmdresp(mlan_adapter * pmadapter)
 
         if (pioctl_buf && (ret == MLAN_STATUS_SUCCESS))
             pioctl_buf->status_code = MLAN_ERROR_NO_ERROR;
-        else if (pioctl_buf && (ret == MLAN_STATUS_FAILURE))
+        else if (pioctl_buf && (ret == MLAN_STATUS_FAILURE) &&
+                 !pioctl_buf->status_code)
             pioctl_buf->status_code = MLAN_ERROR_CMD_RESP_FAIL;
 
         /* Clean up and put current command back to cmd_free_q */
@@ -1267,8 +1309,15 @@ wlan_process_cmdresp(mlan_adapter * pmadapter)
     if ((pmadapter->hw_status == WlanHardwareStatusInitializing) &&
         (pmadapter->last_init_cmd == cmdresp_no)) {
         i = pmpriv->bss_index + 1;
-        while (!(pmpriv_next = pmadapter->priv[i]) && i < pmadapter->priv_num)
+        while (i < pmadapter->priv_num && !(pmpriv_next = pmadapter->priv[i]))
             i++;
+        if (pmpriv_next && pmpriv_next->bss_virtual) {
+            i = pmpriv_next->bss_index + 1;
+            /** skip virtual interface */
+            while (i < pmadapter->priv_num &&
+                   !(pmpriv_next = pmadapter->priv[i]))
+                i++;
+        }
         if (!pmpriv_next || i >= pmadapter->priv_num) {
 #if defined(STA_SUPPORT)
             if (pmadapter->pwarm_reset_ioctl_req) {
@@ -1293,10 +1342,10 @@ wlan_process_cmdresp(mlan_adapter * pmadapter)
     return ret;
 }
 
-/** 
+/**
  *  @brief This function handles the timeout of command sending.
  *  It will re-send the same command again.
- *  
+ *
  *  @param function_context   A pointer to function_context
  *  @return 	   N/A
  */
@@ -1484,7 +1533,7 @@ wlan_flush_scan_queue(IN pmlan_adapter pmadapter)
 
 /**
  *  @brief Cancel all pending cmd.
- *  
+ *
  *  @param pmadapter	A pointer to mlan_adapter
  *
  *  @return		N/A
@@ -1535,8 +1584,80 @@ wlan_cancel_all_pending_cmd(pmlan_adapter pmadapter)
 }
 
 /**
+ *  @brief Cancel specific bss's pending ioctl cmd.
+ *
+ *  @param pmadapter	A pointer to mlan_adapter
+ *  @param bss_index	BSS index
+ *
+ *  @return		N/A
+ */
+t_void
+wlan_cancel_bss_pending_cmd(pmlan_adapter pmadapter, t_u32 bss_index)
+{
+    pmlan_callbacks pcb = &pmadapter->callbacks;
+    cmd_ctrl_node *pcmd_node = MNULL;
+    mlan_ioctl_req *pioctl_buf = MNULL;
+#ifdef STA_SUPPORT
+    t_u8 flash_scan = MFALSE;
+#endif
+    ENTER();
+
+    PRINTM(MIOCTL, "MOAL Cancel BSS IOCTL: bss_index=%d\n", (int) bss_index);
+    wlan_request_cmd_lock(pmadapter);
+    if (pmadapter->curr_cmd && pmadapter->curr_cmd->pioctl_buf) {
+        pioctl_buf = (mlan_ioctl_req *) pmadapter->curr_cmd->pioctl_buf;
+        if (pioctl_buf->bss_index == bss_index) {
+            pcmd_node = pmadapter->curr_cmd;
+            pcmd_node->pioctl_buf = MNULL;
+            pcmd_node->cmd_flag |= CMD_F_CANCELED;
+#ifdef STA_SUPPORT
+            if (pioctl_buf->req_id == MLAN_IOCTL_SCAN)
+                flash_scan = MTRUE;
+#endif
+            pioctl_buf->status_code = MLAN_ERROR_CMD_CANCEL;
+            pcb->moal_ioctl_complete(pmadapter->pmoal_handle, pioctl_buf,
+                                     MLAN_STATUS_FAILURE);
+        }
+    }
+    while ((pcmd_node =
+            wlan_get_bss_pending_ioctl_cmd(pmadapter, bss_index)) != MNULL) {
+        util_unlink_list(pmadapter->pmoal_handle, &pmadapter->cmd_pending_q,
+                         (pmlan_linked_list) pcmd_node,
+                         pmadapter->callbacks.moal_spin_lock,
+                         pmadapter->callbacks.moal_spin_unlock);
+        pioctl_buf = (mlan_ioctl_req *) pcmd_node->pioctl_buf;
+        pcmd_node->pioctl_buf = MNULL;
+#ifdef STA_SUPPORT
+        if (pioctl_buf->req_id == MLAN_IOCTL_SCAN)
+            flash_scan = MTRUE;
+#endif
+        pioctl_buf->status_code = MLAN_ERROR_CMD_CANCEL;
+        pcb->moal_ioctl_complete(pmadapter->pmoal_handle, pioctl_buf,
+                                 MLAN_STATUS_FAILURE);
+        wlan_release_cmd_lock(pmadapter);
+        wlan_insert_cmd_to_free_q(pmadapter, pcmd_node);
+        wlan_request_cmd_lock(pmadapter);
+    }
+    wlan_release_cmd_lock(pmadapter);
+#ifdef STA_SUPPORT
+    if (pmadapter->pext_scan_ioctl_req &&
+        (pmadapter->pext_scan_ioctl_req->bss_index == bss_index))
+        flash_scan = MTRUE;
+    if (flash_scan) {
+        /* IOCTL will be completed, avoid calling IOCTL complete again from
+           EVENT */
+        pmadapter->pext_scan_ioctl_req = MNULL;
+        /* Cancel all pending scan command */
+        wlan_flush_scan_queue(pmadapter);
+    }
+#endif
+    LEAVE();
+    return;
+}
+
+/**
  *  @brief Cancel pending ioctl cmd.
- *  
+ *
  *  @param pmadapter	A pointer to mlan_adapter
  *  @param pioctl_req	A pointer to mlan_ioctl_req buf
  *
@@ -1648,7 +1769,7 @@ wlan_ret_rx_mgmt_ind(IN pmlan_private pmpriv,
 /**
  *  @brief This function checks conditions and prepares to
  *              send sleep confirm command to firmware if OK.
- * 
+ *
  *  @param pmadapter    A pointer to mlan_adapter structure
  *
  *  @return             N/A
@@ -1671,9 +1792,9 @@ wlan_check_ps_cond(mlan_adapter * pmadapter)
     LEAVE();
 }
 
-/** 
+/**
  *  @brief This function sends the HS_ACTIVATED event to the application
- *   
+ *
  *  @param priv         A pointer to mlan_private structure
  *  @param activated    MTRUE if activated, MFALSE if de-activated
  *
@@ -1701,9 +1822,9 @@ wlan_host_sleep_activated_event(pmlan_private priv, t_u8 activated)
     LEAVE();
 }
 
-/** 
+/**
  *  @brief This function sends the HS_WAKEUP event to the application
- *   
+ *
  *  @param priv         A pointer to mlan_private structure
  *
  *  @return             N/A
@@ -1722,9 +1843,9 @@ wlan_host_sleep_wakeup_event(pmlan_private priv)
     LEAVE();
 }
 
-/** 
+/**
  *  @brief This function handles the command response of hs_cfg
- * 
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
  *  @param pioctl_buf   A pointer to mlan_ioctl_req structure
@@ -1774,9 +1895,9 @@ wlan_ret_802_11_hs_cfg(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief Perform hs related activities on receiving the power up interrupt
- *  
+ *
  *  @param pmadapter  A pointer to the adapter structure
  *  @return           N/A
  */
@@ -1791,9 +1912,9 @@ wlan_process_hs_config(pmlan_adapter pmadapter)
     return;
 }
 
-/** 
+/**
  *  @brief Check sleep confirm command response and set the state to ASLEEP
- *  
+ *
  *  @param pmadapter  A pointer to the adapter structure
  *  @param pbuf       A pointer to the command response buffer
  *  @param upld_len   Command response buffer length
@@ -1849,7 +1970,7 @@ wlan_process_sleep_confirm_resp(pmlan_adapter pmadapter, t_u8 * pbuf,
 
 /**
  *  @brief This function prepares command of power mode
- *  
+ *
  *  @param pmpriv		A pointer to mlan_private structure
  *  @param cmd	   		A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   the action: GET or SET
@@ -1971,9 +2092,9 @@ wlan_cmd_enh_power_mode(pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of ps_mode_enh
- * 
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
  *  @param pioctl_buf   A pointer to mlan_ioctl_req structure
@@ -2123,9 +2244,9 @@ wlan_ret_enh_power_mode(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of tx rate query
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
  *  @param pioctl_buf   A pointer to mlan_ioctl_req structure
@@ -2157,7 +2278,7 @@ wlan_ret_802_11_tx_rate_query(IN pmlan_private pmpriv,
                     rate->param.rate_cfg.rate =
                         pmpriv->tx_rate + MLAN_RATE_INDEX_MCS0;
                 else
-                    /* For HostCmd_CMD_802_11_TX_RATE_QUERY, there is a hole in 
+                    /* For HostCmd_CMD_802_11_TX_RATE_QUERY, there is a hole in
                        rate table between HR/DSSS and OFDM rates, so minus 1
                        for OFDM rate index */
                     rate->param.rate_cfg.rate =
@@ -2216,9 +2337,9 @@ wlan_ret_802_11_tx_rate_query(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of tx_rate_cfg.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -2282,12 +2403,12 @@ wlan_cmd_tx_rate_cfg(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of tx_rate_cfg
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
- *  @param pioctl_buf   A pointer to mlan_ioctl_req structure 
+ *  @param pioctl_buf   A pointer to mlan_ioctl_req structure
  *
  *  @return             MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
  */
@@ -2394,7 +2515,7 @@ wlan_ret_tx_rate_cfg(IN pmlan_private pmpriv,
 }
 
 /**
- *  @brief  This function issues adapter specific commands 
+ *  @brief  This function issues adapter specific commands
  *  		to initialize firmware
  *
  *  @param pmadapter    A pointer to mlan_adapter structure
@@ -2417,8 +2538,8 @@ wlan_adapter_init_cmd(IN pmlan_adapter pmadapter)
     pmpriv_sta = wlan_get_priv(pmadapter, MLAN_BSS_ROLE_STA);
 #endif
 
-    /* 
-     * This should be issued in the very first to config 
+    /*
+     * This should be issued in the very first to config
      *   SDIO_GPIO interrupt mode.
      */
     if (wlan_set_sdio_gpio_int(pmpriv) != MLAN_STATUS_SUCCESS) {
@@ -2446,7 +2567,7 @@ wlan_adapter_init_cmd(IN pmlan_adapter pmadapter)
         pmadapter->cal_data_len = 0;
     }
 
-    /* 
+    /*
      * Get HW spec
      */
     ret = wlan_prepare_cmd(pmpriv, HostCmd_CMD_GET_HW_SPEC,
@@ -2508,9 +2629,9 @@ wlan_adapter_init_cmd(IN pmlan_adapter pmadapter)
     return ret;
 }
 
-/** 
+/**
  *  @brief This function prepares command of get_hw_spec.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param pcmd         A pointer to HostCmd_DS_COMMAND structure
  *
@@ -2532,7 +2653,7 @@ wlan_cmd_get_hw_spec(IN pmlan_private pmpriv, IN HostCmd_DS_COMMAND * pcmd)
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of set_cfg_data.
  *
  *  @param pmpriv       A pointer to mlan_private strcture
@@ -2610,9 +2731,9 @@ wlan_ret_cfg_data(IN pmlan_private pmpriv,
     return ret;
 }
 
-/** 
+/**
  *  @brief This function prepares command of mac_control.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param pcmd         A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   Command action
@@ -2644,9 +2765,9 @@ wlan_cmd_mac_control(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of mac_control
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
  *  @param pioctl_buf   A pointer to mlan_ioctl_req structure
@@ -2663,9 +2784,9 @@ wlan_ret_mac_control(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of get_hw_spec
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
  *  @param pioctl_buf   A pointer to command buffer
@@ -2804,9 +2925,9 @@ wlan_ret_get_hw_spec(IN pmlan_private pmpriv,
     return ret;
 }
 
-/** 
+/**
  *  @brief This function prepares command of radio_control.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -2832,12 +2953,12 @@ wlan_cmd_802_11_radio_control(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of radio_control
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
- *  @param pioctl_buf   A pointer to mlan_ioctl_req structure 
+ *  @param pioctl_buf   A pointer to mlan_ioctl_req structure
  *
  *  @return             MLAN_STATUS_SUCCESS
  */
@@ -2863,9 +2984,9 @@ wlan_ret_802_11_radio_control(IN pmlan_private pmpriv,
 }
 
 #ifdef WIFI_DIRECT_SUPPORT
-/** 
+/**
  *  @brief This function prepares command of remain_on_channel.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -2901,12 +3022,12 @@ wlan_cmd_remain_on_channel(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of remain_on_channel
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
- *  @param pioctl_buf   A pointer to mlan_ioctl_req structure 
+ *  @param pioctl_buf   A pointer to mlan_ioctl_req structure
  *
  *  @return             MLAN_STATUS_SUCCESS
  */
@@ -2932,9 +3053,9 @@ wlan_ret_remain_on_channel(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of wifi direct mode.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -2961,12 +3082,12 @@ wlan_cmd_wifi_direct_mode(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of wifi direct mode
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
- *  @param pioctl_buf   A pointer to mlan_ioctl_req structure 
+ *  @param pioctl_buf   A pointer to mlan_ioctl_req structure
  *
  *  @return             MLAN_STATUS_SUCCESS
  */
@@ -2989,12 +3110,11 @@ wlan_ret_wifi_direct_mode(IN pmlan_private pmpriv,
 }
 #endif
 
-/** 
+/**
  *  @brief This function prepares command of hs wakeup reason.
- *  
+ *
  *  @param pmpriv    	A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
- *  @param cmd_action   the action: GET or SET
  *  @param pdata_buf    A pointer to data buffer
  *  @return             MLAN_STATUS_SUCCESS
  */
@@ -3012,10 +3132,10 @@ wlan_cmd_hs_wakeup_reason(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of
  *  hs wakeup reason
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
  *  @param pioctl_buf   A pointer to command buffer
@@ -3042,9 +3162,9 @@ wlan_ret_hs_wakeup_reason(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of rf_antenna.
- *  
+ *
  *  @param pmpriv   A pointer to mlan_private structure
  *  @param cmd      A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -3106,9 +3226,9 @@ wlan_ret_802_11_rf_antenna(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of reg_access.
- *  
+ *
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   the action: GET or SET
  *  @param pdata_buf    A pointer to data buffer
@@ -3192,9 +3312,10 @@ wlan_cmd_reg_access(IN HostCmd_DS_COMMAND * cmd,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of reg_access
- *  
+ *
+ *  @param pmadapter    A pointer to mlan_adapter structure
  *  @param type         The type of reg access (MAC, BBP or RF)
  *  @param resp         A pointer to HostCmd_DS_COMMAND
  *  @param pioctl_buf   A pointer to command buffer
@@ -3285,9 +3406,9 @@ wlan_ret_reg_access(mlan_adapter * pmadapter,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of mem_access.
- *  
+ *
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   the action: GET or SET
  *  @param pdata_buf    A pointer to data buffer
@@ -3314,9 +3435,9 @@ wlan_cmd_mem_access(IN HostCmd_DS_COMMAND * cmd,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of mem_access
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
  *  @param pioctl_buf   A pointer to command buffer

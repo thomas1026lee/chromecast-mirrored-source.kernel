@@ -3,19 +3,19 @@
   * @brief This file contains declaration referring to
   * functions defined in moal module
   *
-  * Copyright (C) 2008-2011, Marvell International Ltd. 
-  * 
-  * This software file (the "File") is distributed by Marvell International 
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991 
-  * (the "License").  You may use, redistribute and/or modify this File in 
-  * accordance with the terms and conditions of the License, a copy of which 
+  * Copyright (C) 2008-2011, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+  * (the "License").  You may use, redistribute and/or modify this File in
+  * accordance with the terms and conditions of the License, a copy of which
   * is available by writing to the Free Software Foundation, Inc.,
   * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA or on the
   * worldwide web at http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
   *
-  * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE 
-  * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE 
-  * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about 
+  * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
+  * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
+  * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
   * this warranty disclaimer.
   *
   */
@@ -43,6 +43,7 @@ mlan_status moal_free_mlan_buffer(IN t_void * pmoal_handle,
 mlan_status moal_send_packet_complete(IN t_void * pmoal_handle,
                                       IN pmlan_buffer pmbuf,
                                       IN mlan_status status);
+
 /** moal_write_reg */
 mlan_status moal_write_reg(IN t_void * pmoal_handle,
                            IN t_u32 reg, IN t_u32 data);
@@ -60,6 +61,9 @@ mlan_status moal_recv_event(IN t_void * pmoal_handle, IN pmlan_event pmevent);
 mlan_status moal_malloc(IN t_void * pmoal_handle,
                         IN t_u32 size, IN t_u32 flag, OUT t_u8 ** ppbuf);
 mlan_status moal_mfree(IN t_void * pmoal_handle, IN t_u8 * pbuf);
+mlan_status moal_vmalloc(IN t_void * pmoal_handle,
+                         IN t_u32 size, OUT t_u8 ** ppbuf);
+mlan_status moal_vfree(IN t_void * pmoal_handle, IN t_u8 * pbuf);
 t_void *moal_memset(IN t_void * pmoal_handle,
                     IN t_void * pmem, IN t_u8 byte, IN t_u32 num);
 t_void *moal_memcpy(IN t_void * pmoal_handle,
@@ -77,7 +81,7 @@ mlan_status moal_init_lock(IN t_void * pmoal_handle, OUT t_void ** pplock);
 mlan_status moal_free_lock(IN t_void * pmoal_handle, IN t_void * plock);
 mlan_status moal_spin_lock(IN t_void * pmoal_handle, IN t_void * plock);
 mlan_status moal_spin_unlock(IN t_void * pmoal_handle, IN t_void * plock);
-t_void moal_print(IN t_void * pmoal_handle, IN t_u32 level, IN t_s8 * pformat,
+t_void moal_print(IN t_void * pmoal_handle, IN t_u32 level, IN char *pformat,
                   IN ...);
 t_void moal_print_netintf(IN t_void * pmoal_handle, IN t_u32 bss_index,
                           IN t_u32 level);

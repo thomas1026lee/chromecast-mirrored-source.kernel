@@ -3,7 +3,7 @@
  *
  *  @brief This file contains the handling of TX/RX in MLAN
  *
- *  Copyright (C) 2009-2011, Marvell International Ltd. 
+ *  Copyright (C) 2009-2011, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -12,7 +12,7 @@
  *  is available by writing to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA or on the
  *  worldwide web at http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
- *  
+ *
  *  THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
  *  IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
  *  ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
@@ -51,7 +51,7 @@ Change Log:
 ********************************************************/
 /**
  *   @brief This function processes the received buffer
- *     
+ *
  *   @param pmadapter A pointer to mlan_adapter
  *   @param pmbuf     A pointer to the received buffer
  *
@@ -86,9 +86,9 @@ wlan_handle_rx_packet(pmlan_adapter pmadapter, pmlan_buffer pmbuf)
     return ret;
 }
 
-/** 
- *  @brief This function checks the conditions and sends packet to device 
- *  
+/**
+ *  @brief This function checks the conditions and sends packet to device
+ *
  *  @param priv	   A pointer to mlan_private structure
  *  @param pmbuf   A pointer to the mlan_buffer for process
  *  @param tx_param A pointer to mlan_tx_param structure
@@ -193,9 +193,6 @@ wlan_write_data_complete(IN pmlan_adapter pmadapter,
             pcb->moal_send_packet_complete(pmadapter->pmoal_handle,
                                            pmbuf, status);
         } else {
-            if (pmbuf->flags & MLAN_BUF_FLAG_BRIDGE_BUF) {
-                pmadapter->pending_bridge_pkts--;
-            }
             /* pmbuf was allocated by MLAN */
             wlan_free_mlan_buffer(pmadapter, pmbuf);
         }

@@ -195,6 +195,9 @@ static struct debug_data items[] = {
     {"malloc_count", item_handle_size(malloc_count),
      item_handle_addr(malloc_count)}
     ,
+    {"vmalloc_count", item_handle_size(vmalloc_count),
+     item_handle_addr(vmalloc_count)}
+    ,
     {"mbufalloc_count", item_handle_size(mbufalloc_count),
      item_handle_addr(mbufalloc_count)}
     ,
@@ -333,6 +336,9 @@ static struct debug_data uap_items[] = {
     ,
     {"malloc_count", item_handle_size(malloc_count),
      item_handle_addr(malloc_count)}
+    ,
+    {"vmalloc_count", item_handle_size(vmalloc_count),
+     item_handle_addr(vmalloc_count)}
     ,
     {"mbufalloc_count", item_handle_size(mbufalloc_count),
      item_handle_addr(mbufalloc_count)}
@@ -511,6 +517,11 @@ woal_debug_read(char *page, char **s, off_t off, int cnt, int *eof, void *data)
         else
             p += sprintf(p, "%s=%d\n", d[i].name, val);
     }
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,29)
+    for (i = 0; i < 4; i++)
+        p += sprintf(p, "wmm_tx_pending[%d]:%d\n", i,
+                     atomic_read(&priv->wmm_tx_pending[i]));
+#endif
     if (info.tx_tbl_num) {
         p += sprintf(p, "Tx BA stream table:\n");
         for (i = 0; i < info.tx_tbl_num; i++) {
@@ -633,8 +644,9 @@ woal_debug_write(struct file *f, const char *buf, unsigned long cnt, void *data)
     kfree(pdata);
 
 #ifdef DEBUG_LEVEL1
-    if (last_drvdbg != drvdbg)
+    if (last_drvdbg != drvdbg) {
         woal_set_drvdbg(priv, drvdbg);
+    }
 #endif
 
     /* Set debug information */
@@ -705,7 +717,7 @@ woal_debug_entry(moal_private * priv)
 
     priv->items_priv.priv = priv;
     priv->items_priv_hist.priv = priv;
-    handle_items = 7;
+    handle_items = 8;
 #ifdef SDIO_MMC_DEBUG
     handle_items += 2;
 #endif
@@ -730,7 +742,7 @@ woal_debug_entry(moal_private * priv)
 #endif
 
 	/* Create proc entry for driver histogram data */
-    r2 = create_proc_entry("histogram", 0666, priv->proc_entry);
+    r2 = create_proc_entry("histogram", 0644, priv->proc_entry);
     if (r2 == NULL) {
         LEAVE();
         return;

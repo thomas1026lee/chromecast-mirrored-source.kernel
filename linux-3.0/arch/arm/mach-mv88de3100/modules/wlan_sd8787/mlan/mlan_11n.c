@@ -2,7 +2,7 @@
  *
  *  @brief This file contains functions for 11n handling.
  *
- *  Copyright (C) 2008-2011, Marvell International Ltd. 
+ *  Copyright (C) 2008-2011, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -44,7 +44,7 @@ Change log:
     Local Functions
 ********************************************************/
 
-/** 
+/**
  *
  *  @brief set/get max tx buf size
  *
@@ -70,8 +70,8 @@ wlan_11n_ioctl_max_tx_buf_size(IN pmlan_adapter pmadapter,
     return ret;
 }
 
-/** 
- *  @brief Set/get htcapinfo configuration 
+/**
+ *  @brief Set/get htcapinfo configuration
  *
  *  @param pmadapter	A pointer to mlan_adapter structure
  *  @param pioctl_req	A pointer to ioctl request buffer
@@ -136,7 +136,7 @@ wlan_11n_ioctl_htusrcfg(IN pmlan_adapter pmadapter,
     return ret;
 }
 
-/** 
+/**
  *  @brief Enable/Disable AMSDU AGGR CTRL
  *
  *  @param pmadapter	A pointer to mlan_adapter structure
@@ -175,8 +175,8 @@ wlan_11n_ioctl_amsdu_aggr_ctrl(IN pmlan_adapter pmadapter,
     return ret;
 }
 
-/** 
- *  @brief Set/get 11n configuration 
+/**
+ *  @brief Set/get 11n configuration
  *
  *  @param pmadapter	A pointer to mlan_adapter structure
  *  @param pioctl_req	A pointer to ioctl request buffer
@@ -214,7 +214,7 @@ wlan_11n_ioctl_httxcfg(IN pmlan_adapter pmadapter,
     return ret;
 }
 
-/** 
+/**
  *  @brief Set/get TX beamforming capabilities
  *
  *  @param pmadapter    A pointer to mlan_adapter structure
@@ -243,12 +243,12 @@ wlan_11n_ioctl_tx_bf_cap(IN pmlan_adapter pmadapter,
 }
 
 /**
- *  @brief This function will resend addba request to all 
- *          the peer in the TxBAStreamTbl 
- *  
+ *  @brief This function will resend addba request to all
+ *          the peer in the TxBAStreamTbl
+ *
  *  @param priv     A pointer to mlan_private
  *
- *  @return         N/A	       
+ *  @return         N/A
  */
 static void
 wlan_11n_update_addba_request(mlan_private * priv)
@@ -280,8 +280,8 @@ wlan_11n_update_addba_request(mlan_private * priv)
     return;
 }
 
-/** 
- *  @brief Set/get addba parameter 
+/**
+ *  @brief Set/get addba parameter
  *
  *  @param pmadapter	A pointer to mlan_adapter structure
  *  @param pioctl_req	A pointer to ioctl request buffer
@@ -322,8 +322,8 @@ wlan_11n_ioctl_addba_param(IN pmlan_adapter pmadapter,
     return ret;
 }
 
-/** 
- *  @brief Set/get addba reject set 
+/**
+ *  @brief Set/get addba reject set
  *
  *  @param pmadapter	A pointer to mlan_adapter structure
  *  @param pioctl_req	A pointer to ioctl request buffer
@@ -375,7 +375,7 @@ wlan_11n_ioctl_addba_reject(IN pmlan_adapter pmadapter,
 /**
  *  @brief This function will send DELBA to entries in the priv's
  *          Tx BA stream table
- *  
+ *
  *  @param priv                 A pointer to mlan_private
  *  @param pioctl_req	        A pointer to ioctl request buffer
  *  @param tid                  TID
@@ -439,7 +439,7 @@ wlan_send_delba_to_entry_in_txbastream_tbl(pmlan_private priv,
 /**
  *  @brief This function will send DELBA to entries in the priv's
  *          rx reordering table
- *  
+ *
  *  @param priv                 A pointer to mlan_private
  *  @param pioctl_req	        A pointer to ioctl request buffer
  *  @param tid                  TID
@@ -497,7 +497,7 @@ wlan_send_delba_to_entry_in_reorder_tbl(pmlan_private priv,
     return ret;
 }
 
-/** 
+/**
  *  @brief IOCTL to delete BA
  *
  *  @param pmadapter	A pointer to mlan_adapter structure
@@ -608,7 +608,7 @@ wlan_11n_ioctl_delba(IN pmlan_adapter pmadapter, IN pmlan_ioctl_req pioctl_req)
     return ret;
 }
 
-/** 
+/**
  *  @brief IOCTL to reject addba req
  *
  *  @param pmadapter	A pointer to mlan_adapter structure
@@ -647,8 +647,8 @@ wlan_11n_ioctl_rejectaddbareq(IN pmlan_adapter pmadapter,
     return ret;
 }
 
-/** 
- *  @brief Set/get aggr_prio_tbl 
+/**
+ *  @brief Set/get aggr_prio_tbl
  *
  *  @param pmadapter	A pointer to mlan_adapter structure
  *  @param pioctl_req	A pointer to ioctl request buffer
@@ -713,7 +713,7 @@ wlan_11n_ioctl_aggr_prio_tbl(IN pmlan_adapter pmadapter,
     return ret;
 }
 
-/** 
+/**
  *  @brief Get supported MCS set
  *
  *  @param pmadapter	A pointer to mlan_adapter structure
@@ -757,9 +757,9 @@ wlan_11n_ioctl_supported_mcs_set(IN pmlan_adapter pmadapter,
 }
 
 /**
- *  @brief This function checks if the given pointer is valid entry of 
+ *  @brief This function checks if the given pointer is valid entry of
  *         Tx BA Stream table
- *  
+ *
  *  @param priv         Pointer to mlan_private
  *  @param ptxtblptr    Pointer to tx ba stream entry
  *
@@ -795,9 +795,9 @@ wlan_is_txbastreamptr_valid(mlan_private * priv, TxBAStreamTbl * ptxtblptr)
 }
 
 /**
- *  @brief This function will return the pointer to a entry in BA Stream 
+ *  @brief This function will return the pointer to a entry in BA Stream
  *  		table which matches the ba_status requested
- *  
+ *
  *  @param priv    	    A pointer to mlan_private
  *  @param ba_status	Current status of the BA stream
  *
@@ -970,9 +970,9 @@ wlan_fill_ht_cap_tlv(mlan_private * priv,
 }
 #endif /* STA_SUPPORT */
 
-/** 
+/**
  *  @brief This function prints the 802.11n device capability
- *  
+ *
  *  @param pmadapter     A pointer to mlan_adapter structure
  *  @param cap           Capability value
  *
@@ -1043,9 +1043,9 @@ wlan_show_dot11ndevcap(pmlan_adapter pmadapter, t_u32 cap)
     return;
 }
 
-/** 
+/**
  *  @brief This function prints the 802.11n device MCS
- *  
+ *
  *  @param pmadapter A pointer to mlan_adapter structure
  *  @param support   Support value
  *
@@ -1063,10 +1063,10 @@ wlan_show_devmcssupport(pmlan_adapter pmadapter, t_u8 support)
     return;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of
  *              delete a block ack request
- *  
+ *
  *  @param priv    A pointer to mlan_private structure
  *  @param resp    A pointer to HostCmd_DS_COMMAND
  *
@@ -1096,7 +1096,7 @@ wlan_ret_11n_delba(mlan_private * priv, HostCmd_DS_COMMAND * resp)
         {
             wlan_send_addba(priv, ptx_ba_tbl->tid, ptx_ba_tbl->ra);
         }
-    } else {                    /* 
+    } else {                    /*
                                  * In case of failure, recreate the deleted stream in
                                  * case we initiated the ADDBA
                                  */
@@ -1117,10 +1117,10 @@ wlan_ret_11n_delba(mlan_private * priv, HostCmd_DS_COMMAND * resp)
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of
  *              add a block ack request
- *  
+ *
  *  @param priv    A pointer to mlan_private structure
  *  @param resp    A pointer to HostCmd_DS_COMMAND
  *
@@ -1197,9 +1197,9 @@ wlan_ret_11n_addba_req(mlan_private * priv, HostCmd_DS_COMMAND * resp)
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of reconfigure tx buf
- *  
+ *
  *  @param priv         A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -1234,9 +1234,9 @@ wlan_cmd_recfg_tx_buf(mlan_private * priv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of amsdu aggr control
- *  
+ *
  *  @param priv         A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -1274,9 +1274,9 @@ wlan_cmd_amsdu_aggr_ctrl(mlan_private * priv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of amsdu aggr ctrl
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
  *  @param pioctl_buf   A pointer to mlan_ioctl_req structure
@@ -1304,9 +1304,9 @@ wlan_ret_amsdu_aggr_ctrl(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares 11n cfg command
- *  
+ *
  *  @param pmpriv    	A pointer to mlan_private structure
  *  @param cmd	   	A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action 	the action: GET or SET
@@ -1332,9 +1332,9 @@ wlan_cmd_11n_cfg(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of 11ncfg
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
  *  @param pioctl_buf   A pointer to mlan_ioctl_req structure
@@ -1359,9 +1359,9 @@ wlan_ret_11n_cfg(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares reject addba req command
- *  
+ *
  *  @param pmpriv    	A pointer to mlan_private structure
  *  @param cmd	   	A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action 	the action: GET or SET
@@ -1387,9 +1387,9 @@ wlan_cmd_reject_addba_req(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of reject addba req
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param resp         A pointer to HostCmd_DS_COMMAND
  *  @param pioctl_buf   A pointer to mlan_ioctl_req structure
@@ -1424,7 +1424,7 @@ wlan_ret_reject_addba_req(IN pmlan_private pmpriv,
  *  @param pbss_desc    A pointer to BSSDescriptor_t structure
  *  @param ppbuffer     A Pointer to command buffer pointer
  *
- *  @return bytes added to the buffer       
+ *  @return bytes added to the buffer
  */
 int
 wlan_cmd_append_11n_tlv(IN mlan_private * pmpriv,
@@ -1550,21 +1550,15 @@ wlan_cmd_append_11n_tlv(IN mlan_private * pmpriv,
         memcpy(pmadapter, (t_u8 *) pext_cap + sizeof(MrvlIEtypesHeader_t),
                (t_u8 *) pbss_desc->pext_cap + sizeof(IEEEtypes_Header_t),
                pbss_desc->pext_cap->ieee_hdr.len);
-        if (pmpriv->hotspot_cfg & HOTSPOT_ENABLED) {
-            if (((t_u8) (pmpriv->hotspot_cfg >> 8)) &
-                HOTSPOT_ENABLE_INTERWORKING_IND)
-                pext_cap->ext_cap.Interworking = 1;
-            if (((t_u8) (pmpriv->hotspot_cfg >> 8)) & HOTSPOT_ENABLE_TDLS_IND)
-                pext_cap->ext_cap.TDLSSupport = 1;
-        }
+        if (!ISSUPP_EXTCAP_TDLS(pmpriv->ext_cap))
+            RESET_EXTCAP_TDLS(pext_cap->ext_cap);
+        if (!ISSUPP_EXTCAP_INTERWORKING(pmpriv->ext_cap))
+            RESET_EXTCAP_INTERWORKING(pext_cap->ext_cap);
         HEXDUMP("Extended Capabilities IE", (t_u8 *) pext_cap,
                 sizeof(MrvlIETypes_ExtCap_t));
         *ppbuffer += sizeof(MrvlIETypes_ExtCap_t);
         ret_len += sizeof(MrvlIETypes_ExtCap_t);
         pext_cap->header.len = wlan_cpu_to_le16(pext_cap->header.len);
-    } else if (pmpriv->hotspot_cfg & HOTSPOT_ENABLED) {
-        wlan_add_ext_capa_info_ie(pmpriv, ppbuffer);
-        ret_len += sizeof(MrvlIETypes_ExtCap_t);
     }
     LEAVE();
     return ret_len;
@@ -1572,7 +1566,7 @@ wlan_cmd_append_11n_tlv(IN mlan_private * pmpriv,
 
 #endif /* STA_SUPPORT */
 
-/** 
+/**
  *  @brief 11n configuration handler
  *
  *  @param pmadapter	A pointer to mlan_adapter structure
@@ -1642,7 +1636,7 @@ wlan_11n_cfg_ioctl(IN pmlan_adapter pmadapter, IN pmlan_ioctl_req pioctl_req)
 
 /**
  *  @brief This function will delete the given entry in Tx BA Stream table
- *  
+ *
  *  @param priv    	Pointer to mlan_private
  *  @param ptx_tbl	Pointer to tx ba stream entry to delete
  *
@@ -1678,7 +1672,7 @@ wlan_11n_delete_txbastream_tbl_entry(mlan_private * priv,
 
 /**
  *  @brief This function will delete all the entries in Tx BA Stream table
- *  
+ *
  *  @param priv         A pointer to mlan_private
  *
  *  @return             N/A
@@ -1709,9 +1703,9 @@ wlan_11n_deleteall_txbastream_tbl(mlan_private * priv)
 }
 
 /**
- *  @brief This function will return the pointer to an entry in BA Stream 
+ *  @brief This function will return the pointer to an entry in BA Stream
  *  		table which matches the give RA/TID pair
- *  
+ *
  *  @param priv    A pointer to mlan_private
  *  @param tid	   TID to find in reordering table
  *  @param ra      RA to find in reordering table
@@ -1757,9 +1751,9 @@ wlan_11n_get_txbastream_tbl(mlan_private * priv, int tid, t_u8 * ra)
 }
 
 /**
- *  @brief This function will create a entry in tx ba stream table for the 
+ *  @brief This function will create a entry in tx ba stream table for the
  *  		given RA/TID.
- *  
+ *
  *  @param priv      A pointer to mlan_private
  *  @param ra        RA to find in reordering table
  *  @param tid	     TID to find in reordering table
@@ -1801,7 +1795,7 @@ wlan_11n_create_txbastream_tbl(mlan_private * priv,
 
 /**
  *  @brief This function will send a block ack to given tid/ra
- *  
+ *
  *  @param priv     A pointer to mlan_private
  *  @param tid	    TID to send the ADDBA
  *  @param peer_mac MAC address to send the ADDBA
@@ -1849,7 +1843,7 @@ wlan_send_addba(mlan_private * priv, int tid, t_u8 * peer_mac)
 
 /**
  *  @brief This function will delete a block ack to given tid/ra
- *  
+ *
  *  @param priv    		A pointer to mlan_private
  *  @param pioctl_req	A pointer to ioctl request buffer
  *  @param tid	   		TID to send the ADDBA
@@ -1888,10 +1882,10 @@ wlan_send_delba(mlan_private * priv, pmlan_ioctl_req pioctl_req, int tid,
     return ret;
 }
 
-/** 
+/**
  *  @brief This function handles the command response of
  *  		delete a block ack request
- *  
+ *
  *  @param priv		A pointer to mlan_private structure
  *  @param del_ba	A pointer to command response buffer
  *
@@ -1918,9 +1912,9 @@ wlan_11n_delete_bastream(mlan_private * priv, t_u8 * del_ba)
     LEAVE();
 }
 
-/** 
+/**
  *  @brief Get Rx reordering table
- *   
+ *
  *  @param priv         A pointer to mlan_private structure
  *  @param buf          A pointer to rx_reorder_tbl structure
  *  @return             number of rx reorder table entry
@@ -1967,9 +1961,9 @@ wlan_get_rxreorder_tbl(mlan_private * priv, rx_reorder_tbl * buf)
     return count;
 }
 
-/** 
+/**
  *  @brief Get transmit BA stream table
- *   
+ *
  *  @param priv         A pointer to mlan_private structure
  *  @param buf          A pointer to tx_ba_stream_tbl structure
  *  @return             number of ba stream table entry
@@ -2011,9 +2005,9 @@ wlan_get_txbastream_tbl(mlan_private * priv, tx_ba_stream_tbl * buf)
 
 /**
  *  @brief This function cleans up txbastream_tbl for specific station
- *  
+ *
  *  @param priv    	A pointer to mlan_private
- *  @param ra       RA to find in txbastream_tbl       
+ *  @param ra       RA to find in txbastream_tbl
  *  @return 	   	N/A
  */
 void

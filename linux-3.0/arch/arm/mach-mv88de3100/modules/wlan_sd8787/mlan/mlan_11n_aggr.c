@@ -2,7 +2,7 @@
  *
  *  @brief This file contains functions for 11n Aggregation.
  *
- *  Copyright (C) 2008-2011, Marvell International Ltd. 
+ *  Copyright (C) 2008-2011, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -68,7 +68,7 @@ wlan_11n_form_amsdu_pkt(pmlan_adapter pmadapter, t_u8 * amsdu_buf, t_u8 * data,
         0x03,                   /* LLC CTRL */
         {0x00, 0x00, 0x00},     /* SNAP OUI */
         0x0000                  /* SNAP type */
-            /* 
+            /*
              * This field will be overwritten
              * later with ethertype
              */
@@ -105,7 +105,7 @@ wlan_11n_form_amsdu_pkt(pmlan_adapter pmadapter, t_u8 * amsdu_buf, t_u8 * data,
  *  @brief Add TxPD to AMSDU header
  *
  *  @param priv     A pointer to mlan_private structure
- *  @param mbuf		Pointer to buffer where the TxPD will be formed 
+ *  @param mbuf		Pointer to buffer where the TxPD will be formed
  *
  *  @return		N/A
  */
@@ -120,8 +120,8 @@ wlan_11n_form_amsdu_txpd(mlan_private * priv, mlan_buffer * mbuf)
     ptx_pd = (TxPD *) mbuf->pbuf;
     memset(pmadapter, ptx_pd, 0, sizeof(TxPD));
 
-    /* 
-     * Original priority has been overwritten 
+    /*
+     * Original priority has been overwritten
      */
     ptx_pd->priority = (t_u8) mbuf->priority;
     ptx_pd->pkt_delay_2ms = wlan_wmm_compute_driver_packet_delay(priv, mbuf);
@@ -182,11 +182,17 @@ static int
 wlan_11n_get_num_aggrpkts(t_u8 * data, int total_pkt_len)
 {
     int pkt_count = 0, pkt_len, pad;
+    t_u8 hdr_len = sizeof(Eth803Hdr_t);
 
     ENTER();
-    while (total_pkt_len > 0) {
+    while (total_pkt_len >= hdr_len) {
         /* Length will be in network format, change it to host */
         pkt_len = mlan_ntohs((*(t_u16 *) (data + (2 * MLAN_MAC_ADDR_LENGTH))));
+        if (pkt_len > total_pkt_len) {
+            PRINTM(MERROR, "Error in packet length.\n");
+            break;
+        }
+
         pad = (((pkt_len + sizeof(Eth803Hdr_t)) & 3)) ?
             (4 - ((pkt_len + sizeof(Eth803Hdr_t)) & 3)) : 0;
         data += pkt_len + pad + sizeof(Eth803Hdr_t);
@@ -202,7 +208,7 @@ wlan_11n_get_num_aggrpkts(t_u8 * data, int total_pkt_len)
 ********************************************************/
 
 /**
- *  @brief Deaggregate the received AMSDU packet 
+ *  @brief Deaggregate the received AMSDU packet
  *
  *  @param priv		A pointer to mlan_private structure
  *  @param pmbuf	A pointer to aggregated data packet
@@ -224,6 +230,7 @@ wlan_11n_deaggregate_pkt(mlan_private * priv, pmlan_buffer pmbuf)
     t_u8 rfc1042_eth_hdr[MLAN_MAC_ADDR_LENGTH] = { 0xaa, 0xaa, 0x03,
         0x00, 0x00, 0x00
     };
+    t_u8 hdr_len = sizeof(Eth803Hdr_t);
 
     ENTER();
 
@@ -239,7 +246,7 @@ wlan_11n_deaggregate_pkt(mlan_private * priv, pmlan_buffer pmbuf)
 
     pmbuf->use_count = wlan_11n_get_num_aggrpkts(data, total_pkt_len);
 
-    while (total_pkt_len > 0) {
+    while (total_pkt_len >= hdr_len) {
         prx_pkt = (RxPacketHdr_t *) data;
         /* Length will be in network format, change it to host */
         pkt_len = mlan_ntohs((*(t_u16 *) (data + (2 * MLAN_MAC_ADDR_LENGTH))));
@@ -285,14 +292,16 @@ wlan_11n_deaggregate_pkt(mlan_private * priv, pmlan_buffer pmbuf)
                pkt_len);
 
 #ifdef UAP_SUPPORT
-        if (GET_BSS_ROLE(priv) == MLAN_BSS_ROLE_UAP)
+        if (GET_BSS_ROLE(priv) == MLAN_BSS_ROLE_UAP) {
             ret = wlan_uap_recv_packet(priv, daggr_mbuf);
-        else
+        } else {
 #endif /* UAP_SUPPORT */
             ret =
                 pmadapter->callbacks.moal_recv_packet(pmadapter->pmoal_handle,
                                                       daggr_mbuf);
-
+#ifdef UAP_SUPPORT
+        }
+#endif /* UAP_SUPPORT */
         switch (ret) {
         case MLAN_STATUS_PENDING:
             break;
@@ -320,7 +329,7 @@ wlan_11n_deaggregate_pkt(mlan_private * priv, pmlan_buffer pmbuf)
  *  @param priv 	A pointer to mlan_private structure
  *  @param pra_list	Pointer to the RA List table containing the pointers
  *  			    to packets.
- *  @param headroom	Any interface specific headroom that may be need. TxPD 
+ *  @param headroom	Any interface specific headroom that may be need. TxPD
  *  				will be formed leaving this headroom.
  *  @param ptrindex	Pointer index
  *
@@ -368,6 +377,8 @@ wlan_11n_aggregate_pkt(mlan_private * priv, raListTbl * pra_list,
         pmbuf_aggr->priority = pmbuf_src->priority;
         pmbuf_aggr->pbuf = data;
         pmbuf_aggr->data_offset = 0;
+        pmbuf_aggr->in_ts_sec = pmbuf_src->in_ts_sec;
+        pmbuf_aggr->in_ts_usec = pmbuf_src->in_ts_usec;
 
         /* Form AMSDU */
         wlan_11n_form_amsdu_txpd(priv, pmbuf_aggr);

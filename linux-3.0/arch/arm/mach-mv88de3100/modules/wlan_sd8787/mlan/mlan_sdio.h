@@ -1,21 +1,21 @@
 /** @file mlan_sdio.h
-  * 
-  * @brief This file contains definitions for SDIO interface.
-  * driver. 
   *
-  * Copyright (C) 2008-2011, Marvell International Ltd. 
-  * 
-  * This software file (the "File") is distributed by Marvell International 
-  * Ltd. under the terms of the GNU General Public License Version 2, June 1991 
-  * (the "License").  You may use, redistribute and/or modify this File in 
-  * accordance with the terms and conditions of the License, a copy of which 
+  * @brief This file contains definitions for SDIO interface.
+  * driver.
+  *
+  * Copyright (C) 2008-2011, Marvell International Ltd.
+  *
+  * This software file (the "File") is distributed by Marvell International
+  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+  * (the "License").  You may use, redistribute and/or modify this File in
+  * accordance with the terms and conditions of the License, a copy of which
   * is available by writing to the Free Software Foundation, Inc.,
   * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA or on the
   * worldwide web at http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
   *
-  * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE 
-  * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE 
-  * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about 
+  * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
+  * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
+  * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
   * this warranty disclaimer.
   *
   */
@@ -27,9 +27,14 @@ Change log:
 #define	_MLAN_SDIO_H
 
 /** Block mode */
+#ifndef BLOCK_MODE
 #define BLOCK_MODE	1
+#endif
+
 /** Fixed address mode */
+#ifndef FIXED_ADDRESS
 #define FIXED_ADDRESS	0
+#endif
 
 /* Host Control Registers */
 /** Host Control Registers : Host to Card Event */
@@ -45,12 +50,14 @@ Change log:
 
 /** Host Control Registers : Host interrupt RSR */
 #define HOST_INT_RSR_REG		0x01
+
 /** Host Control Registers : Upload host interrupt RSR */
 #define UP_LD_HOST_INT_RSR		(0x1U)
 #define HOST_INT_RSR_MASK		0x3F
 
 /** Host Control Registers : Host interrupt mask */
 #define HOST_INT_MASK_REG		0x02
+
 /** Host Control Registers : Upload host interrupt mask */
 #define UP_LD_HOST_INT_MASK		(0x1U)
 /** Host Control Registers : Download host interrupt mask */
@@ -62,6 +69,7 @@ Change log:
 
 /** Host Control Registers : Host interrupt status */
 #define HOST_INT_STATUS_REG		0x03
+
 /** Host Control Registers : Upload host interrupt status */
 #define UP_LD_HOST_INT_STATUS		(0x1U)
 /** Host Control Registers : Download host interrupt status */

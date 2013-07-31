@@ -4,7 +4,7 @@
  *  structures and declares global function prototypes used
  *  in MLAN module.
  *
- *  Copyright (C) 2008-2011, Marvell International Ltd. 
+ *  Copyright (C) 2008-2011, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -146,11 +146,11 @@ typedef enum _KEY_TYPE_ID
     /** Key type : WEP */
     KEY_TYPE_ID_WEP = 0,
     /** Key type : TKIP */
-    KEY_TYPE_ID_TKIP,
+    KEY_TYPE_ID_TKIP = 1,
     /** Key type : AES */
-    KEY_TYPE_ID_AES,
-    KEY_TYPE_ID_WAPI,
-    KEY_TYPE_ID_AES_CMAC,
+    KEY_TYPE_ID_AES = 2,
+    KEY_TYPE_ID_WAPI = 3,
+    KEY_TYPE_ID_AES_CMAC = 4,
 } KEY_TYPE_ID;
 
 /** Key Info flag for multicast key */
@@ -211,11 +211,11 @@ typedef enum _KEY_INFO_WAPI
 /** The number of times to try when polling for status bits */
 #define MAX_POLL_TRIES			100
 
-/** The number of times to try when waiting for downloaded firmware to 
+/** The number of times to try when waiting for downloaded firmware to
      become active when multiple interface is present */
 #define MAX_MULTI_INTERFACE_POLL_TRIES  1000
 
-/** The number of times to try when waiting for downloaded firmware to 
+/** The number of times to try when waiting for downloaded firmware to
      become active. (polling the scratch register). */
 #define MAX_FIRMWARE_POLL_TRIES		100
 
@@ -370,6 +370,9 @@ typedef enum _WLAN_802_11_WEP_STATUS
 #define TLV_TYPE_MGMT_IE             (PROPRIETARY_TLV_BASE_ID + 0x69)   // 0x0169
 /** TLV type: MAX_MGMT_IE */
 #define TLV_TYPE_MAX_MGMT_IE         (PROPRIETARY_TLV_BASE_ID + 0xaa)   // 0x01aa
+
+/** TLV type: hs wake hold off */
+#define TLV_TYPE_HS_WAKE_HOLDOFF     (PROPRIETARY_TLV_BASE_ID + 0xB6)   // 0x01b6
 
 /** TLV type : HT Capabilities */
 #define TLV_TYPE_HT_CAP                  (PROPRIETARY_TLV_BASE_ID + 0x4a)       // 0x014a
@@ -605,6 +608,25 @@ typedef enum _WLAN_802_11_WEP_STATUS
 #define GET_SECONDARYCHAN(Field2) (Field2 & (MBIT(0) | MBIT(1)))
 /** RadioType : Set secondary channel */
 #define SET_SECONDARYCHAN(RadioType, SECCHAN) (RadioType |= (SECCHAN << 4))
+
+/** ExtCap : Support for TDLS */
+#define ISSUPP_EXTCAP_TDLS(ext_cap) (ext_cap.TDLSSupport)
+/** ExtCap : Set support TDLS */
+#define SET_EXTCAP_TDLS(ext_cap) (ext_cap.TDLSSupport = 1)
+/** ExtCap : Reset support TDLS */
+#define RESET_EXTCAP_TDLS(ext_cap) (ext_cap.TDLSSupport = 0)
+/** ExtCap : Support for Interworking */
+#define ISSUPP_EXTCAP_INTERWORKING(ext_cap) (ext_cap.Interworking)
+/** ExtCap : Set support Interworking */
+#define SET_EXTCAP_INTERWORKING(ext_cap) (ext_cap.Interworking = 1)
+/** ExtCap : Reset support Interworking */
+#define RESET_EXTCAP_INTERWORKING(ext_cap) (ext_cap.Interworking = 0)
+/** ExtCap : Support for Operation Mode Notification */
+#define ISSUPP_EXTCAP_OPERMODENTF(ext_cap) (ext_cap.OperModeNtf)
+/** ExtCap : Set support Operation Mode Notification */
+#define SET_EXTCAP_OPERMODENTF(ext_cap) (ext_cap.OperModeNtf = 1)
+/** ExtCap : Reset support Operation Mode Notification */
+#define RESET_EXTCAP_OPERMODENTF(ext_cap) (ext_cap.OperModeNtf = 0)
 
 /** LLC/SNAP header len   */
 #define LLC_SNAP_LEN    8
@@ -1045,6 +1067,8 @@ typedef enum _ENH_PS_MODES
 
 /** Card Event definition : BG scan report */
 #define EVENT_BG_SCAN_REPORT            0x00000018
+/** Card Event definition : BG scan stopped */
+#define EVENT_BG_SCAN_STOPPED		0x00000065
 
 /** Card Event definition : Beacon RSSI low */
 #define EVENT_RSSI_LOW                  0x00000019
@@ -1117,6 +1141,9 @@ typedef enum _ENH_PS_MODES
 
 /** Event definition:  Scan results through event */
 #define EVENT_EXT_SCAN_REPORT           0x00000058
+
+/** Event definition : FW debug information */
+#define EVENT_FW_DEBUG_INFO             0x00000063
 
 /** Event definition: RXBA_SYNC */
 #define EVENT_RXBA_SYNC                 0x00000059
@@ -2328,10 +2355,10 @@ typedef MLAN_PACK_START struct _AdHoc_BssDesc_t
     /** Supported data rates */
     t_u8 data_rates[HOSTCMD_SUPPORTED_RATES];
 
-    /* 
+    /*
      *  DO NOT ADD ANY FIELDS TO THIS STRUCTURE.
-     *  It is used in the Adhoc join command and will cause a 
-     *  binary layout mismatch with the firmware 
+     *  It is used in the Adhoc join command and will cause a
+     *  binary layout mismatch with the firmware
      */
 } MLAN_PACK_END AdHoc_BssDesc_t;
 
@@ -2729,9 +2756,9 @@ typedef MLAN_PACK_START struct
 } MLAN_PACK_END IEBody;
 #endif /* STA_SUPPORT */
 
-/* 
- * This scan handle Country Information IE(802.11d compliant) 
- * Define data structure for HostCmd_CMD_802_11_SCAN 
+/*
+ * This scan handle Country Information IE(802.11d compliant)
+ * Define data structure for HostCmd_CMD_802_11_SCAN
  */
 /** HostCmd_DS_802_11_SCAN */
 typedef MLAN_PACK_START struct _HostCmd_DS_802_11_SCAN
@@ -2742,9 +2769,9 @@ typedef MLAN_PACK_START struct _HostCmd_DS_802_11_SCAN
     t_u8 bssid[MLAN_MAC_ADDR_LENGTH];
     /** TLV buffer */
     t_u8 tlv_buffer[1];
-    /** MrvlIEtypes_SsIdParamSet_t      SsIdParamSet; 
+    /** MrvlIEtypes_SsIdParamSet_t      SsIdParamSet;
      *  MrvlIEtypes_ChanListParamSet_t  ChanListParamSet;
-     *  MrvlIEtypes_RatesParamSet_t     OpRateSet; 
+     *  MrvlIEtypes_RatesParamSet_t     OpRateSet;
      */
 } MLAN_PACK_END HostCmd_DS_802_11_SCAN;
 
@@ -3079,15 +3106,15 @@ typedef MLAN_PACK_START struct
 /**
  *  @brief Firmware command structure to retrieve the firmware WMM status.
  *
- *  Used to retrieve the status of each WMM AC Queue in TLV 
+ *  Used to retrieve the status of each WMM AC Queue in TLV
  *    format (MrvlIEtypes_WmmQueueStatus_t) as well as the current WMM
- *    parameter IE advertised by the AP.  
- *  
+ *    parameter IE advertised by the AP.
+ *
  *  Used in response to a EVENT_WMM_STATUS_CHANGE event signaling
  *    a QOS change on one of the ACs or a change in the WMM Parameter in
  *    the Beacon.
  *
- *  TLV based command, byte arrays used for max sizing purpose. There are no 
+ *  TLV based command, byte arrays used for max sizing purpose. There are no
  *    arguments sent in the command, the TLVs are returned by the firmware.
  */
 typedef MLAN_PACK_START struct
@@ -3135,7 +3162,7 @@ typedef MLAN_PACK_START struct
     mlan_wmm_ac_e access_category;         /**< WMM_AC_BK(0) to WMM_AC_VO(3) */
     /** @brief MSDU lifetime expiry per 802.11e
      *
-     *   - Ignored if 0 on a set command 
+     *   - Ignored if 0 on a set command
      *   - Set to the 802.11e specified 500 TUs when defaulted
      */
     t_u16 msdu_lifetime_expiry;
@@ -3337,7 +3364,7 @@ typedef MLAN_PACK_START struct _MrvlIEtypes_Cipher_t
     t_u8 group_cipher;
 } MLAN_PACK_END MrvlIEtypes_Cipher_t;
 
-/* rsnMode -    
+/* rsnMode -
  *      Bit 0    : No RSN
  *      Bit 1-2  : RFU
  *      Bit 3    : WPA
@@ -3556,7 +3583,7 @@ typedef MLAN_PACK_START struct _HostCmd_DS_OTP_USER_DATA
 typedef MLAN_PACK_START struct _HostCmd_DS_HS_WAKEUP_REASON
 {
     /** wakeupReason:
-      * 0: unknown 
+      * 0: unknown
       * 1: Broadcast data matched
       * 2: Multicast data matched
       * 3: Unicast data matched
@@ -3567,6 +3594,15 @@ typedef MLAN_PACK_START struct _HostCmd_DS_HS_WAKEUP_REASON
       * Others: reserved. (set to 0) */
     t_u16 wakeup_reason;
 } MLAN_PACK_END HostCmd_DS_HS_WAKEUP_REASON;
+
+/** MrvlIEtypes_HsWakeHoldoff_t */
+typedef MLAN_PACK_START struct _MrvlIEtypes_HsWakeHoldoff_t
+{
+    /** Header */
+    MrvlIEtypesHeader_t header;
+    /** Minimum delay between HsActive and HostWake (in msec) */
+    t_u16 min_wake_holdoff;
+} MLAN_PACK_END MrvlIEtypes_HsWakeHoldoff_t;
 
 /** HostCmd_DS_INACTIVITY_TIMEOUT_EXT */
 typedef MLAN_PACK_START struct _HostCmd_DS_INACTIVITY_TIMEOUT_EXT
@@ -4224,8 +4260,8 @@ typedef MLAN_PACK_START struct
     t_u8 switch_count;  /**< Number of TBTTs until the switch is to occur */
 } MLAN_PACK_END HostCmd_DS_802_11_CHAN_SW_ANN;
 
-/**        
- * @brief Enumeration of measurement types, including max supported 
+/**
+ * @brief Enumeration of measurement types, including max supported
  *        enum for 11h/11k
  */
 typedef MLAN_PACK_START enum _MeasType_t
@@ -4236,7 +4272,7 @@ typedef MLAN_PACK_START enum _MeasType_t
 
 } MLAN_PACK_END MeasType_t;
 
-/**        
+/**
  * @brief Mode octet of the measurement request element (7.3.2.21)
  */
 typedef MLAN_PACK_START struct
@@ -4259,7 +4295,7 @@ typedef MLAN_PACK_START struct
 
 } MLAN_PACK_END MeasReqMode_t;
 
-/**        
+/**
  * @brief Common measurement request structure (7.3.2.21.1 to 7.3.2.21.3)
  */
 typedef MLAN_PACK_START struct
@@ -4270,23 +4306,23 @@ typedef MLAN_PACK_START struct
 
 } MLAN_PACK_END MeasReqCommonFormat_t;
 
-/**        
+/**
  * @brief Basic measurement request structure (7.3.2.21.1)
  */
 typedef MeasReqCommonFormat_t MeasReqBasic_t;
 
-/**        
+/**
  * @brief CCA measurement request structure (7.3.2.21.2)
  */
 typedef MeasReqCommonFormat_t MeasReqCCA_t;
 
-/**        
+/**
  * @brief RPI measurement request structure (7.3.2.21.3)
  */
 typedef MeasReqCommonFormat_t MeasReqRPI_t;
 
-/**        
- * @brief Union of the availble measurement request types.  Passed in the 
+/**
+ * @brief Union of the availble measurement request types.  Passed in the
  *        driver/firmware interface.
  */
 typedef union
@@ -4297,7 +4333,7 @@ typedef union
 
 } MeasRequest_t;
 
-/**        
+/**
  * @brief Mode octet of the measurement report element (7.3.2.22)
  */
 typedef MLAN_PACK_START struct
@@ -4316,7 +4352,7 @@ typedef MLAN_PACK_START struct
 
 } MLAN_PACK_END MeasRptMode_t;
 
-/**        
+/**
  * @brief Basic measurement report (7.3.2.22.1)
  */
 typedef MLAN_PACK_START struct
@@ -4328,7 +4364,7 @@ typedef MLAN_PACK_START struct
 
 } MLAN_PACK_END MeasRptBasic_t;
 
-/**        
+/**
  * @brief CCA measurement report (7.3.2.22.2)
  */
 typedef MLAN_PACK_START struct
@@ -4340,7 +4376,7 @@ typedef MLAN_PACK_START struct
 
 } MLAN_PACK_END MeasRptCCA_t;
 
-/**        
+/**
  * @brief RPI measurement report (7.3.2.22.3)
  */
 typedef MLAN_PACK_START struct
@@ -4352,8 +4388,8 @@ typedef MLAN_PACK_START struct
 
 } MLAN_PACK_END MeasRptRPI_t;
 
-/**        
- * @brief Union of the availble measurement report types.  Passed in the 
+/**
+ * @brief Union of the availble measurement report types.  Passed in the
  *        driver/firmware interface.
  */
 typedef union
@@ -4364,7 +4400,7 @@ typedef union
 
 } MeasReport_t;
 
-/**        
+/**
  * @brief Structure passed to firmware to perform a measurement
  */
 typedef MLAN_PACK_START struct
@@ -4377,7 +4413,7 @@ typedef MLAN_PACK_START struct
 
 } MLAN_PACK_END HostCmd_DS_MEASUREMENT_REQUEST;
 
-/**        
+/**
  * @brief Structure passed back from firmware with a measurement report,
  *        also can be to send a measurement report to another STA
  */

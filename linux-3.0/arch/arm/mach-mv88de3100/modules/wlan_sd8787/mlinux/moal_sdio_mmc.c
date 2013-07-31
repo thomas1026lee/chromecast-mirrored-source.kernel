@@ -2,20 +2,20 @@
  *
  *  @brief This file contains SDIO MMC IF (interface) module
  *  related functions.
- * 
- * Copyright (C) 2008-2011, Marvell International Ltd. 
  *
- * This software file (the "File") is distributed by Marvell International 
- * Ltd. under the terms of the GNU General Public License Version 2, June 1991 
- * (the "License").  You may use, redistribute and/or modify this File in 
- * accordance with the terms and conditions of the License, a copy of which 
+ * Copyright (C) 2008-2011, Marvell International Ltd.
+ *
+ * This software file (the "File") is distributed by Marvell International
+ * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+ * (the "License").  You may use, redistribute and/or modify this File in
+ * accordance with the terms and conditions of the License, a copy of which
  * is available by writing to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA or on the
  * worldwide web at http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
  *
- * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE 
- * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about 
+ * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
+ * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
  * this warranty disclaimer.
  *
  */
@@ -75,7 +75,7 @@ static struct sdio_driver REFDATA wlan_sdio = {
     .id_table = wlan_ids,
     .probe = woal_sdio_probe,
     .remove = woal_sdio_remove,
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,29)
     .drv = {
             .owner = THIS_MODULE,
 #ifdef SDIO_SUSPEND_RESUME
@@ -99,7 +99,7 @@ static struct sdio_driver REFDATA wlan_sdio = {
 		Local Functions
 ********************************************************/
 /**  @brief This function dump the sdio register
- *  
+ *
  *  @param handle  A Pointer to the moal_handle structure
  *  @return 	   N/A
  */
@@ -107,30 +107,25 @@ void
 woal_dump_sdio_reg(moal_handle * handle)
 {
     int ret = 0;
-    t_u8 data;
-    data =
-        sdio_f0_readb(((struct sdio_mmc_card *) handle->card)->func, 0x05,
-                      &ret);
-    PRINTM(MMSG, "fun0: reg 0x05=0x%x ret=%d\n", data, ret);
-    data =
-        sdio_f0_readb(((struct sdio_mmc_card *) handle->card)->func, 0x04,
-                      &ret);
-    PRINTM(MMSG, "fun0: reg 0x04=0x%x ret=%d\n", data, ret);
-    data =
-        sdio_readb(((struct sdio_mmc_card *) handle->card)->func, 0x03, &ret);
-    PRINTM(MMSG, "fun1: reg 0x03=0x%x ret=%d\n", data, ret);
-    data =
-        sdio_readb(((struct sdio_mmc_card *) handle->card)->func, 0x04, &ret);
-    PRINTM(MMSG, "fun1: reg 0x04=0x%x ret=%d\n", data, ret);
-    data =
-        sdio_readb(((struct sdio_mmc_card *) handle->card)->func, 0x05, &ret);
-    PRINTM(MMSG, "fun1: reg 0x05=0x%x ret=%d\n", data, ret);
-    data =
-        sdio_readb(((struct sdio_mmc_card *) handle->card)->func, 0x60, &ret);
-    PRINTM(MMSG, "fun1: reg 0x60=0x%x ret=%d\n", data, ret);
-    data =
-        sdio_readb(((struct sdio_mmc_card *) handle->card)->func, 0x61, &ret);
-    PRINTM(MMSG, "fun1: reg 0x61=0x%x ret=%d\n", data, ret);
+    t_u8 data, i, len;
+    int fun0_reg[] = { 0x05, 0x04 };
+    int fun1_reg[] = { 0x03, 0x04, 0x05, 0x60, 0x61 };
+
+    len = sizeof(fun0_reg) / sizeof(fun0_reg[0]);
+    for (i = 0; i < len; i++) {
+        data = sdio_f0_readb(((struct sdio_mmc_card *) handle->card)->func,
+                             fun0_reg[i], &ret);
+        PRINTM(MMSG, "fun0: reg 0x%02x=0x%02x ret=%d\n", fun0_reg[i], data,
+               ret);
+    }
+
+    len = sizeof(fun1_reg) / sizeof(fun1_reg[0]);
+    for (i = 0; i < len; i++) {
+        data = sdio_readb(((struct sdio_mmc_card *) handle->card)->func,
+                          fun1_reg[i], &ret);
+        PRINTM(MMSG, "fun1: reg 0x%02x=0x%02x ret=%d\n", fun1_reg[i], data,
+               ret);
+    }
     return;
 }
 
@@ -138,9 +133,9 @@ woal_dump_sdio_reg(moal_handle * handle)
 		Global Functions
 ********************************************************/
 
-/** 
+/**
  *  @brief This function handles the interrupt.
- *  
+ *
  *  @param func	   A pointer to the sdio_func structure
  *  @return 	   N/A
  */
@@ -169,7 +164,7 @@ woal_sdio_interrupt(struct sdio_func *func)
 }
 
 /**  @brief This function handles client driver probe.
- *  
+ *
  *  @param func	   A pointer to sdio_func structure.
  *  @param id	   A pointer to sdio_device_id structure.
  *  @return 	   MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE/error code
@@ -229,7 +224,7 @@ woal_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
 }
 
 /**  @brief This function handles client driver remove.
- *  
+ *
  *  @param func	   A pointer to sdio_func structure.
  *  @return 	   N/A
  */
@@ -257,7 +252,7 @@ woal_sdio_remove(struct sdio_func *func)
 #ifdef MMC_PM_KEEP_POWER
 #ifdef MMC_PM_FUNC_SUSPENDED
 /**  @brief This function tells lower driver that WLAN is suspended
- *  
+ *
  *  @param handle  A Pointer to the moal_handle structure
  *  @return 	   N/A
  */
@@ -274,7 +269,7 @@ woal_wlan_is_suspended(moal_handle * handle)
 #endif
 
 /**  @brief This function handles client driver suspend
- *  
+ *
  *  @param dev	   A pointer to device structure
  *  @return 	   MLAN_STATUS_SUCCESS or error code
  */
@@ -355,6 +350,9 @@ woal_sdio_suspend(struct device *dev)
 #endif
         } else {
             PRINTM(MMSG, "HS not actived, suspend fail!");
+            handle->suspend_fail = MTRUE;
+            for (i = 0; i < handle->priv_num; i++)
+                netif_device_attach(handle->priv[i]->netdev);
             ret = -EBUSY;
             goto done;
         }
@@ -369,7 +367,7 @@ woal_sdio_suspend(struct device *dev)
 }
 
 /**  @brief This function handles client driver resume
- *  
+ *
  *  @param dev	   A pointer to device structure
  *  @return 	   MLAN_STATUS_SUCCESS
  */
@@ -420,7 +418,7 @@ woal_sdio_resume(struct device *dev)
 #endif
 #endif /* SDIO_SUSPEND_RESUME */
 
-/** 
+/**
  *  @brief This function writes data into card register
  *
  *  @param handle   A Pointer to the moal_handle structure
@@ -438,7 +436,7 @@ woal_write_reg(moal_handle * handle, t_u32 reg, t_u32 data)
     return ret;
 }
 
-/** 
+/**
  *  @brief This function reads data from card register
  *
  *  @param handle   A Pointer to the moal_handle structure
@@ -536,9 +534,9 @@ woal_read_data_sync(moal_handle * handle, mlan_buffer * pmbuf, t_u32 port,
     return ret;
 }
 
-/** 
+/**
  *  @brief This function registers the IF module in bus driver
- *  
+ *
  *  @return	   MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
  */
 mlan_status
@@ -559,9 +557,9 @@ woal_bus_register(void)
     return ret;
 }
 
-/** 
+/**
  *  @brief This function de-registers the IF module in bus driver
- *  
+ *
  *  @return 	   N/A
  */
 void
@@ -575,9 +573,9 @@ woal_bus_unregister(void)
     LEAVE();
 }
 
-/** 
+/**
  *  @brief This function de-registers the device
- *  
+ *
  *  @param handle A pointer to moal_handle structure
  *  @return 	  N/A
  */
@@ -600,9 +598,9 @@ woal_unregister_dev(moal_handle * handle)
     LEAVE();
 }
 
-/** 
+/**
  *  @brief This function registers the device
- *  
+ *
  *  @param handle  A pointer to moal_handle structure
  *  @return 	   MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
  */
@@ -650,9 +648,9 @@ woal_register_dev(moal_handle * handle)
     return MLAN_STATUS_FAILURE;
 }
 
-/** 
+/**
  *  @brief This function set bus clock on/off
- *  
+ *
  *  @param handle    A pointer to moal_handle structure
  *  @param option    TRUE--on , FALSE--off
  *  @return 	   MLAN_STATUS_SUCCESS
@@ -680,9 +678,9 @@ woal_sdio_set_bus_clock(moal_handle * handle, t_u8 option)
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function updates card reg based on the Cmd52 value in dev structure
- *  
+ *
  *  @param handle  	A pointer to moal_handle structure
  *  @param func    	A pointer to store func variable
  *  @param reg    	A pointer to store reg variable

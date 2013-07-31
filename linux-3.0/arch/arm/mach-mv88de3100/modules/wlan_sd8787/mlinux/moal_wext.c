@@ -148,7 +148,7 @@ woal_set_nick(struct net_device *dev, struct iw_request_info *info,
 {
     moal_private *priv = (moal_private *) netdev_priv(dev);
     ENTER();
-    /* 
+    /*
      * Check the size of the string
      */
     if (dwrq->length > 16) {
@@ -177,16 +177,16 @@ woal_get_nick(struct net_device *dev, struct iw_request_info *info,
 {
     moal_private *priv = (moal_private *) netdev_priv(dev);
     ENTER();
-    /* 
+    /*
      * Get the Nick Name saved
      */
     strncpy(extra, (char *) priv->nick_name, 16);
     extra[16] = '\0';
-    /* 
+    /*
      * If none, we may want to get the one that was set
      */
 
-    /* 
+    /*
      * Push it out !
      */
     dwrq->length = strlen(extra) + 1;
@@ -260,8 +260,8 @@ woal_set_freq(struct net_device *dev, struct iw_request_info *info,
         goto done;
     }
     bss = (mlan_ds_bss *) req->pbuf;
-    /* 
-     * If setting by frequency, convert to a channel 
+    /*
+     * If setting by frequency, convert to a channel
      */
     if (fwrq->e == 1) {
         long f = fwrq->m / 100000;
@@ -321,9 +321,9 @@ woal_get_freq(struct net_device *dev, struct iw_request_info *info,
         ret = -EFAULT;
         goto done;
     }
-    fwrq->m = (long) bss->param.bss_chan.freq * 100000;
+    fwrq->m = (long) bss->param.bss_chan.freq;
     fwrq->i = (long) bss->param.bss_chan.channel;
-    fwrq->e = 1;
+    fwrq->e = 6;
     fwrq->flags = IW_FREQ_FIXED;
   done:
     if (req)
@@ -677,9 +677,9 @@ woal_get_txpow(struct net_device *dev, struct iw_request_info *info,
     return ret;
 }
 
-/** 
- *  @brief  Set power management 
- *   
+/**
+ *  @brief  Set power management
+ *
  *  @param dev                  A pointer to net_device structure
  *  @param info                 A pointer to iw_request_info structure
  *  @param vwrq                 A pointer to iw_param structure
@@ -708,9 +708,9 @@ woal_set_power(struct net_device *dev, struct iw_request_info *info,
     return ret;
 }
 
-/** 
- *  @brief  Get power management 
- *   
+/**
+ *  @brief  Get power management
+ *
  *  @param dev                  A pointer to net_device structure
  *  @param info                 A pointer to iw_request_info structure
  *  @param vwrq                 A pointer to iw_param structure
@@ -764,7 +764,7 @@ woal_set_retry(struct net_device *dev, struct iw_request_info *info,
     ENTER();
 
     if (vwrq->flags == IW_RETRY_LIMIT) {
-        /* 
+        /*
          * The MAC has a 4-bit Total_Tx_Count register
          * Total_Tx_Count = 1 + Tx_Retry_Count
          */
@@ -881,20 +881,20 @@ woal_set_encode(struct net_device *dev, struct iw_request_info *info,
         else
             sec->param.encrypt_key.key_len = MIN_WEP_KEY_SIZE;
     } else {
-        /* 
-         * No key provided so it is either enable key, 
+        /*
+         * No key provided so it is either enable key,
          * on or off
          */
         if (dwrq->flags & IW_ENCODE_DISABLED) {
             PRINTM(MINFO, "*** iwconfig mlanX key off ***\n");
             sec->param.encrypt_key.key_disable = MTRUE;
         } else {
-            /* 
+            /*
              * iwconfig mlanX key [n]
-             * iwconfig mlanX key on 
+             * iwconfig mlanX key on
              * iwconfig mlanX key open
              * iwconfig mlanX key restricted
-             * Do we want to just set the transmit key index ? 
+             * Do we want to just set the transmit key index ?
              */
             if (index < 0) {
                 PRINTM(MINFO, "*** iwconfig mlanX key on ***\n");
@@ -972,8 +972,8 @@ woal_get_encode(struct net_device *dev, struct iw_request_info *info,
         goto done;
     }
     dwrq->flags = 0;
-    /* 
-     * Check encryption mode 
+    /*
+     * Check encryption mode
      */
     switch (auth_mode) {
     case MLAN_AUTH_MODE_OPEN:
@@ -1298,8 +1298,8 @@ woal_get_gen_ie(struct net_device *dev, struct iw_request_info *info,
 /**
  *  @brief Set IE
  *
- *  Pass an opaque block of data, expected to be IEEE IEs, to the driver 
- *    for eventual passthrough to the firmware in an associate/join 
+ *  Pass an opaque block of data, expected to be IEEE IEs, to the driver
+ *    for eventual passthrough to the firmware in an associate/join
  *    (and potentially start) command.
  *
  *  @param dev                  A pointer to net_device structure
@@ -1357,8 +1357,8 @@ woal_set_gen_ie(struct net_device *dev, struct iw_request_info *info,
     return ret;
 }
 
-/** 
- *  @brief  Extended version of encoding configuration 
+/**
+ *  @brief  Extended version of encoding configuration
  *
  *  @param dev          A pointer to net_device structure
  *  @param info         A pointer to iw_request_info structure
@@ -1404,6 +1404,10 @@ woal_set_encode_ext(struct net_device *dev,
     memcpy(sec->param.encrypt_key.mac_addr, (u8 *) ext->addr.sa_data, ETH_ALEN);
     /* Disable and Remove Key */
     if ((dwrq->flags & IW_ENCODE_DISABLED) && !ext->key_len) {
+        if ((key_index <= 5) && (key_index > 3)) {
+            ret = MLAN_STATUS_SUCCESS;
+            goto done;
+        }
         sec->param.encrypt_key.key_remove = MTRUE;
         sec->param.encrypt_key.key_index = key_index;
         sec->param.encrypt_key.key_flags = KEY_FLAG_REMOVE_KEY;
@@ -1474,8 +1478,8 @@ woal_set_encode_ext(struct net_device *dev,
     return ret;
 }
 
-/** 
- *  @brief  Extended version of encoding configuration 
+/**
+ *  @brief  Extended version of encoding configuration
  *
  *  @param dev          A pointer to net_device structure
  *  @param info         A pointer to iw_request_info structure
@@ -1494,8 +1498,8 @@ woal_get_encode_ext(struct net_device *dev,
     return -EOPNOTSUPP;
 }
 
-/** 
- *  @brief  Request MLME operation 
+/**
+ *  @brief  Request MLME operation
  *
  *  @param dev          A pointer to net_device structure
  *  @param info         A pointer to iw_request_info structure
@@ -1798,7 +1802,7 @@ woal_get_range(struct net_device *dev, struct iw_request_info *info,
 
     woal_sort_channels(&range->freq[0], range->num_frequency);
 
-    /* 
+    /*
      * Set an indication of the max TCP throughput in bit/s that we can
      * expect using this interface
      */
@@ -1835,12 +1839,12 @@ woal_get_range(struct net_device *dev, struct iw_request_info *info,
     range->pmt_flags = IW_POWER_TIMEOUT;
     range->pm_capa = IW_POWER_PERIOD | IW_POWER_TIMEOUT | IW_POWER_ALL_R;
 
-    /* 
+    /*
      * Minimum version we recommend
      */
     range->we_version_source = 15;
 
-    /* 
+    /*
      * Version we are compiled with
      */
     range->we_version_compiled = WIRELESS_EXT;
@@ -1851,10 +1855,10 @@ woal_get_range(struct net_device *dev, struct iw_request_info *info,
     range->min_retry = MLAN_TX_RETRY_MIN;
     range->max_retry = MLAN_TX_RETRY_MAX;
 
-    /* 
+    /*
      * Set the qual, level and noise range values
      */
-    /* 
+    /*
      * need to put the right values here
      */
 /** Maximum quality percentage */
@@ -1871,7 +1875,7 @@ woal_get_range(struct net_device *dev, struct iw_request_info *info,
 
     range->sensitivity = 0;
 
-    /* 
+    /*
      * Setup the supported power level ranges
      */
     memset(range->txpower, 0, sizeof(range->txpower));
@@ -1895,13 +1899,13 @@ woal_get_range(struct net_device *dev, struct iw_request_info *info,
 }
 
 #ifdef MEF_CFG_RX_FILTER
-/** 
+/**
  *  @brief Enable/disable Rx broadcast/multicast filter in non-HS mode
  *
  *  @param priv                 A pointer to moal_private structure
  *  @param enable               MTRUE/MFALSE: enable/disable
  *
- *  @return                     0 -- success, otherwise fail          
+ *  @return                     0 -- success, otherwise fail
  */
 static int
 woal_set_rxfilter(moal_private * priv, BOOLEAN enable)
@@ -1939,7 +1943,7 @@ woal_set_rxfilter(moal_private * priv, BOOLEAN enable)
 #endif
 
 /**
- *  @brief Set priv command 
+ *  @brief Set priv command
  *
  *  @param dev          A pointer to net_device structure
  *  @param info         A pointer to iw_request_info structure
@@ -2142,7 +2146,7 @@ woal_set_priv(struct net_device *dev, struct iw_request_info *info,
         len = sprintf(buf, "OK\n") + 1;
     } else if (strncmp(buf, "QOSINFO", strlen("QOSINFO")) == 0) {
         pdata = buf + strlen("QOSINFO") + 1;
-        if (MLAN_STATUS_SUCCESS != woal_set_qos_cfg(priv, pdata)) {
+        if (MLAN_STATUS_SUCCESS != woal_priv_qos_cfg(priv, MLAN_ACT_SET, pdata)) {
             ret = -EFAULT;
             goto done;
         }
@@ -2303,7 +2307,7 @@ woal_set_essid(struct net_device *dev, struct iw_request_info *info,
     req_ssid.ssid_len = dwrq->length - 1;
 #endif
 
-    /* 
+    /*
      * Check if we asked for `any' or 'particular'
      */
     if (!dwrq->flags) {
@@ -2394,9 +2398,9 @@ woal_set_essid(struct net_device *dev, struct iw_request_info *info,
     return ret;
 }
 
-/** 
- *  @brief Get current essid 
- *   
+/**
+ *  @brief Get current essid
+ *
  *  @param dev      A pointer to net_device structure
  *  @param info     A pointer to iw_request_info structure
  *  @param dwrq     A pointer to iw_point structure
@@ -2523,7 +2527,7 @@ woal_get_scan(struct net_device *dev, struct iw_request_info *info,
             break;
         }
         if (!scan_table[i].freq) {
-            PRINTM(MERROR, "Invalid channel number %d\n",
+            PRINTM(MWARN, "Invalid channel number %d\n",
                    (int) scan_table[i].channel);
             continue;
         }
@@ -2555,7 +2559,7 @@ woal_get_scan(struct net_device *dev, struct iw_request_info *info,
         iwe.len = IW_EV_POINT_LEN + iwe.u.data.length;
         current_ev =
             IWE_STREAM_ADD_POINT(info, current_ev, end_buf, &iwe,
-                                 (t_s8 *) scan_table[i].ssid.ssid);
+                                 (char *) scan_table[i].ssid.ssid);
 
         /* Add mode */
         iwe.cmd = SIOCGIWMODE;
@@ -2572,8 +2576,8 @@ woal_get_scan(struct net_device *dev, struct iw_request_info *info,
 
         /* Frequency */
         iwe.cmd = SIOCGIWFREQ;
-        iwe.u.freq.m = (long) scan_table[i].freq * 100000;
-        iwe.u.freq.e = 1;
+        iwe.u.freq.m = (long) scan_table[i].freq;
+        iwe.u.freq.e = 6;
         iwe.u.freq.flags = IW_FREQ_FIXED;
         iwe.len = IW_EV_FREQ_LEN;
         current_ev =
@@ -2737,7 +2741,7 @@ woal_get_scan(struct net_device *dev, struct iw_request_info *info,
 #endif
         current_val = current_ev + IW_EV_LCP_LEN;
 
-        /* 
+        /*
          * Check if we added any event
          */
         if ((unsigned int) (current_val - current_ev) > IW_EV_LCP_LEN)
@@ -2856,16 +2860,16 @@ static const iw_handler woal_private_handler[] = {
 
 #if WIRELESS_EXT > 14
 
-/** 
+/**
  *  @brief This function sends customized event to application.
- *  
+ *
  *  @param priv    A pointer to moal_private structure
  *  @param str	   A pointer to event string
  *
  *  @return 	   N/A
  */
 void
-woal_send_iwevcustom_event(moal_private * priv, t_s8 * str)
+woal_send_iwevcustom_event(moal_private * priv, char *str)
 {
     union iwreq_data iwrq;
     char buf[IW_CUSTOM_MAX];
@@ -2890,11 +2894,11 @@ woal_send_iwevcustom_event(moal_private * priv, t_s8 * str)
 #endif
 
 #if WIRELESS_EXT >= 18
-/** 
+/**
  *  @brief This function sends mic error event to application.
- *  
+ *
  *  @param priv    A pointer to moal_private structure
- *  @param event   MIC MERROR EVENT. 
+ *  @param event   MIC MERROR EVENT.
  *
  *  @return 	   N/A
  */
@@ -2992,7 +2996,7 @@ woal_get_wireless_stats(struct net_device *dev)
 
     ENTER();
 
-    /* 
+    /*
      * Since schedule() is not allowed from an atomic context
      * such as when dev_base_lock for netdevices is acquired
      * for reading/writing in kernel before this call, HostCmd

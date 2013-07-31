@@ -6,7 +6,7 @@
  *  for sending adhoc start, adhoc join, and association commands
  *  to the firmware.
  *
- *  Copyright (C) 2008-2011, Marvell International Ltd. 
+ *  Copyright (C) 2008-2011, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -54,7 +54,7 @@ Change log:
 /**
  *  @brief Append a generic IE as a pass through TLV to a TLV buffer.
  *
- *  This function is called from the network join command prep. routine. 
+ *  This function is called from the network join command prep. routine.
  *    If the IE buffer has been setup by the application, this routine appends
  *    the buffer as a pass through TLV type to the request.
  *
@@ -81,7 +81,7 @@ wlan_cmd_append_generic_ie(mlan_private * priv, t_u8 ** ppbuffer)
         return 0;
     }
 
-    /* 
+    /*
      * If there is a generic ie buffer setup, append it to the return
      *   parameter buffer pointer.
      */
@@ -117,21 +117,21 @@ wlan_cmd_append_generic_ie(mlan_private * priv, t_u8 ** ppbuffer)
 
 /**
   *  @brief Append TSF tracking info from the scan table for the target AP
-  *  
-  *  This function is called from the network join command prep. routine. 
+  *
+  *  This function is called from the network join command prep. routine.
   *     The TSF table TSF sent to the firmware contains two TSF values:
   *        - the TSF of the target AP from its previous beacon/probe response
   *        - the TSF timestamp of our local MAC at the time we observed the
   *          beacon/probe response.
-  *  
+  *
   *     The firmware uses the timestamp values to set an initial TSF value
   *        in the MAC for the new association after a reassociation attempt.
-  *  
+  *
   *    @param pmpriv     A pointer to mlan_private structure
   *    @param ppbuffer   A pointer to command buffer pointer
   *    @param pbss_desc  A pointer to the BSS Descriptor from the scan table of
   *                      the AP we are trying to join
-  *  
+  *
   *    @return         bytes added to the buffer
   */
 static int
@@ -287,13 +287,13 @@ wlan_setup_rates_from_bssdesc(IN mlan_private * pmpriv,
          pmpriv->adapter->region_code == COUNTRY_CODE_JP_FF)
         && (pbss_desc->phy_param_set.ds_param_set.current_chan == 14)) {
         /* Special Case: For Japan, 11G rates on CH14 are not allowed */
-        card_rates_size = wlan_get_active_data_rates(pmpriv, pmpriv->bss_mode,
-                                                     BAND_B, card_rates);
+        card_rates_size = wlan_get_supported_rates(pmpriv, pmpriv->bss_mode,
+                                                   BAND_B, card_rates);
     } else {
         /* Get the STA supported rates */
-        card_rates_size = wlan_get_active_data_rates(pmpriv, pmpriv->bss_mode,
-                                                     pmpriv->config_bands,
-                                                     card_rates);
+        card_rates_size = wlan_get_supported_rates(pmpriv, pmpriv->bss_mode,
+                                                   pmpriv->config_bands,
+                                                   card_rates);
     }
     /* Get the common rates between AP and STA supported rates */
     if (wlan_get_common_rates(pmpriv, pout_rates, WLAN_SUPPORTED_RATES,
@@ -346,9 +346,9 @@ wlan_update_tsf_timestamps(IN mlan_private * pmpriv,
 }
 
 /**
- *  @brief Append a wapi IE 
+ *  @brief Append a wapi IE
  *
- *  This function is called from the network join command prep. routine. 
+ *  This function is called from the network join command prep. routine.
  *    If the IE buffer has been setup by the application, this routine appends
  *    the buffer as a wapi TLV type to the request.
  *
@@ -375,7 +375,7 @@ wlan_cmd_append_wapi_ie(mlan_private * priv, t_u8 ** ppBuffer)
         return 0;
     }
 
-    /* 
+    /*
      * If there is a wapi ie buffer setup, append it to the return
      *   parameter buffer pointer.
      */
@@ -413,7 +413,7 @@ wlan_cmd_append_wapi_ie(mlan_private * priv, t_u8 ** ppBuffer)
  *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
- *  @param pdata_buf    A pointer cast of BSSDescriptor_t from the 
+ *  @param pdata_buf    A pointer cast of BSSDescriptor_t from the
  *                        scan table to assoc
  *
  *  @return             MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
@@ -548,9 +548,9 @@ wlan_cmd_802_11_associate(IN mlan_private * pmpriv,
     if (!pmpriv->wps.session_enable) {
         if ((pmpriv->sec_info.wpa_enabled || pmpriv->sec_info.wpa2_enabled)) {
             prsn_ie_tlv = (MrvlIEtypes_RsnParamSet_t *) pos;
-            prsn_ie_tlv->header.type = (t_u16) pmpriv->wpa_ie[0];       /* WPA_IE 
+            prsn_ie_tlv->header.type = (t_u16) pmpriv->wpa_ie[0];       /* WPA_IE
                                                                            or
-                                                                           RSN_IE 
+                                                                           RSN_IE
                                                                          */
             prsn_ie_tlv->header.type = prsn_ie_tlv->header.type & 0x00FF;
             prsn_ie_tlv->header.type =
@@ -649,7 +649,7 @@ wlan_cmd_802_11_associate(IN mlan_private * pmpriv,
         goto done;
     }
 
-    /* 
+    /*
      * Call 11h join API after capability bits are set so adhoc/infra 11h
      * behavior can be properly triggered.  pos modified if data is appended
      */
@@ -728,7 +728,7 @@ wlan_cmd_802_11_associate(IN mlan_private * pmpriv,
  *     .------------------------------------------------------------.
  *
  *
- *   For cases where an association response was received, the IEEE 
+ *   For cases where an association response was received, the IEEE
  *     standard association response frame is returned:
  *
  *     .------------------------------------------------------------.
@@ -798,7 +798,8 @@ wlan_ret_802_11_associate(IN mlan_private * pmpriv,
             else
                 wlan_recv_event(pmpriv, MLAN_EVENT_ID_DRV_ASSOC_FAILURE_REPORT,
                                 MNULL);
-        }
+        } else
+            wlan_reset_connect_state(pmpriv, MTRUE);
         pmpriv->adapter->dbg.num_cmd_assoc_failure++;
         PRINTM(MERROR, "ASSOC_RESP: Association Failed, "
                "status code = %d, error = 0x%x, a_id = 0x%x\n",
@@ -820,7 +821,8 @@ wlan_ret_802_11_associate(IN mlan_private * pmpriv,
     /* Set the attempted BSSID Index to current */
     pbss_desc = pmpriv->pattempted_bss_desc;
 
-    PRINTM(MINFO, "ASSOC_RESP: %s\n", pbss_desc->ssid.ssid);
+    PRINTM(MCMND, "ASSOC_RESP: %-32s (a_id = 0x%x)\n", pbss_desc->ssid.ssid,
+           wlan_le16_to_cpu(passoc_rsp->a_id));
 
     /* Make a copy of current BSSID descriptor */
     memcpy(pmpriv->adapter, &pmpriv->curr_bss_params.bss_descriptor,
@@ -832,7 +834,7 @@ wlan_ret_802_11_associate(IN mlan_private * pmpriv,
 
     pmpriv->curr_bss_params.band = (t_u8) pbss_desc->bss_band;
 
-    /* 
+    /*
      * Adjust the timestamps in the scan table to be relative to the newly
      * associated AP's TSF
      */
@@ -930,7 +932,8 @@ wlan_ret_802_11_associate(IN mlan_private * pmpriv,
 
     if (!pmpriv->sec_info.wpa_enabled
         && !pmpriv->sec_info.wpa2_enabled
-        && !pmpriv->sec_info.ewpa_enabled && !pmpriv->sec_info.wapi_enabled) {
+        && !pmpriv->sec_info.ewpa_enabled
+        && !pmpriv->sec_info.wapi_enabled && !pmpriv->wps.session_enable) {
         /* We are in Open/WEP mode, open port immediately */
         if (pmpriv->port_ctrl_mode == MTRUE) {
             pmpriv->port_open = MTRUE;
@@ -950,7 +953,8 @@ wlan_ret_802_11_associate(IN mlan_private * pmpriv,
         if (ret != MLAN_STATUS_SUCCESS) {
             if (passoc_rsp->status_code)
                 pioctl_req->status_code =
-                    wlan_le16_to_cpu(passoc_rsp->status_code);
+                    (wlan_le16_to_cpu(*(t_u16 *) & passoc_rsp->capability) <<
+                     16) + wlan_le16_to_cpu(passoc_rsp->status_code);
             else
                 pioctl_req->status_code = MLAN_ERROR_CMD_ASSOC_FAIL;
         } else {
@@ -987,6 +991,7 @@ wlan_cmd_802_11_ad_hoc_start(IN mlan_private * pmpriv,
     MrvlIEtypes_RsnParamSet_t *prsn_ie_tlv;
     MrvlIETypes_HTCap_t *pht_cap;
     MrvlIETypes_HTInfo_t *pht_info;
+    t_u32 rx_mcs_supp = 0;
     /* wpa ie for WPA_NONE AES */
     const t_u8 wpa_ie[24] = { 0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
         0x00, 0x50, 0xf2, 0x04, 0x01, 0x00, 0x00, 0x50,
@@ -1007,7 +1012,7 @@ wlan_cmd_802_11_ad_hoc_start(IN mlan_private * pmpriv,
     pbss_desc = &pmpriv->curr_bss_params.bss_descriptor;
     pmpriv->pattempted_bss_desc = pbss_desc;
 
-    /* 
+    /*
      * Fill in the parameters for 2 data structures:
      *   1. HostCmd_DS_802_11_AD_HOC_START command
      *   2. pbss_desc
@@ -1199,7 +1204,7 @@ wlan_cmd_802_11_ad_hoc_start(IN mlan_private * pmpriv,
         goto done;
     }
 
-    /* 
+    /*
      * Call 11h start API to add any 11h flags/elements as TLV parameters
      */
     append_size_11h = wlan_11h_process_start(pmpriv, &pos, &padhoc_start->cap,
@@ -1247,6 +1252,10 @@ wlan_cmd_802_11_ad_hoc_start(IN mlan_private * pmpriv,
             memset(pmadapter, pht_cap, 0, sizeof(MrvlIETypes_HTCap_t));
             pht_cap->header.type = wlan_cpu_to_le16(HT_CAPABILITY);
             pht_cap->header.len = sizeof(HTCap_t);
+            rx_mcs_supp = GET_RXMCSSUPP(pmadapter->usr_dev_mcs_support);
+            /* Set MCS for 1x1/2x2 */
+            memset(pmadapter, (t_u8 *) pht_cap->ht_cap.supported_mcs_set, 0xff,
+                   rx_mcs_supp);
             wlan_fill_ht_cap_tlv(pmpriv, pht_cap, pmpriv->curr_bss_params.band);
             HEXDUMP("ADHOC_START: HT_CAPABILITIES IE", (t_u8 *) pht_cap,
                     sizeof(MrvlIETypes_HTCap_t));
@@ -1301,7 +1310,7 @@ wlan_cmd_802_11_ad_hoc_start(IN mlan_private * pmpriv,
  *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
- *  @param pdata_buf    Void cast of BSSDescriptor_t from the 
+ *  @param pdata_buf    Void cast of BSSDescriptor_t from the
  *                        scan table to join
  *
  *  @return             MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
@@ -1443,7 +1452,7 @@ wlan_cmd_802_11_ad_hoc_join(IN mlan_private * pmpriv,
         goto done;
     }
 
-    /* 
+    /*
      * Call 11h join API after capability bits are set so
      *   adhoc/infra 11h behavior can be properly triggered.
      *   pos modified if data is appended
@@ -1586,7 +1595,7 @@ wlan_ret_802_11_ad_hoc(IN mlan_private * pmpriv,
 
     pbss_desc = pmpriv->pattempted_bss_desc;
 
-    /* 
+    /*
      * Join result code 0 --> SUCCESS
      */
     if (result) {
@@ -1617,13 +1626,13 @@ wlan_ret_802_11_ad_hoc(IN mlan_private * pmpriv,
         if (pmpriv->adapter->state_rdh.stage == RDH_RESTART_INTFS)
             wlan_11h_radar_detected_callback((t_void *) pmpriv);
     } else {
-        /* 
+        /*
          * Now the join cmd should be successful.
          * If BSSID has changed use SSID to compare instead of BSSID
          */
         PRINTM(MINFO, "ADHOC_J_RESP  %s\n", pbss_desc->ssid.ssid);
 
-        /* 
+        /*
          * Make a copy of current BSSID descriptor, only needed for join since
          * the current descriptor is already being used for adhoc start
          */
@@ -1728,7 +1737,7 @@ wlan_adhoc_start(IN mlan_private * pmpriv,
 
     ENTER();
 
-    /* 
+    /*
      * If the report indicates no measurement was done, leave the default
      * return value alone.
      */

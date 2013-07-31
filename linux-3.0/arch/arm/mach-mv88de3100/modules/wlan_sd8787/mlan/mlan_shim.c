@@ -1,8 +1,8 @@
 /** @file mlan_shim.c
- *  
+ *
  *  @brief This file contains APIs to MOAL module.
  *
- *  Copyright (C) 2008-2011, Marvell International Ltd. 
+ *  Copyright (C) 2008-2011, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -107,7 +107,7 @@ t_void(*assert_callback) (IN t_void * pmoal_handle, IN t_u32 cond) = MNULL;
 
 /** Global moal_print callback */
 t_void(*print_callback) (IN t_void * pmoal_handle,
-                         IN t_u32 level, IN t_s8 * pformat, IN...) = MNULL;
+                         IN t_u32 level, IN char *pformat, IN ...) = MNULL;
 
 /** Global moal_get_system_time callback */
 mlan_status(*get_sys_time_callback) (IN t_void * pmoal_handle,
@@ -128,7 +128,7 @@ t_u32 mlan_drvdbg = DEFAULT_DEBUG_MASK;
 
 /**
  *  @brief This function registers MOAL to MLAN module.
- *  
+ *
  *  @param pmdevice        A pointer to a mlan_device structure
  *                         allocated in MOAL
  *  @param ppmlan_adapter  A pointer to a t_void pointer to store
@@ -178,15 +178,21 @@ mlan_register(IN pmlan_device pmdevice, OUT t_void ** ppmlan_adapter)
     MASSERT(pmdevice->callbacks.moal_memmove);
 
     /* Allocate memory for adapter structure */
-    if ((pmdevice->callbacks.
-         moal_malloc(pmdevice->pmoal_handle, sizeof(mlan_adapter), MLAN_MEM_DEF,
-                     (t_u8 **) & pmadapter) != MLAN_STATUS_SUCCESS)
-        || !pmadapter) {
+    if (pmdevice->callbacks.moal_vmalloc && pmdevice->callbacks.moal_vfree)
+        ret = pmdevice->callbacks.moal_vmalloc(pmdevice->pmoal_handle,
+                                               sizeof(mlan_adapter),
+                                               (t_u8 **) & pmadapter);
+    else
+        ret = pmdevice->callbacks.moal_malloc(pmdevice->pmoal_handle,
+                                              sizeof(mlan_adapter),
+                                              MLAN_MEM_DEF,
+                                              (t_u8 **) & pmadapter);
+    if ((ret != MLAN_STATUS_SUCCESS) || !pmadapter) {
         ret = MLAN_STATUS_FAILURE;
         goto exit_register;
     }
 
-    pmdevice->callbacks.moal_memset(pmadapter, pmadapter,
+    pmdevice->callbacks.moal_memset(pmdevice->pmoal_handle, pmadapter,
                                     0, sizeof(mlan_adapter));
 
     pcb = &pmadapter->callbacks;
@@ -203,6 +209,7 @@ mlan_register(IN pmlan_device pmdevice, OUT t_void ** ppmlan_adapter)
     MASSERT(pcb->moal_recv_packet);
     MASSERT(pcb->moal_recv_event);
     MASSERT(pcb->moal_ioctl_complete);
+
     MASSERT(pcb->moal_write_reg);
     MASSERT(pcb->moal_read_reg);
     MASSERT(pcb->moal_alloc_mlan_buffer);
@@ -270,12 +277,17 @@ mlan_register(IN pmlan_device pmdevice, OUT t_void ** ppmlan_adapter)
         pmadapter->priv[i] = MNULL;
         if (pmdevice->bss_attr[i].active == MTRUE) {
             /* For valid bss_attr, allocate memory for private structure */
-            if ((pcb->
-                 moal_malloc(pmadapter->pmoal_handle, sizeof(mlan_private),
-                             MLAN_MEM_DEF,
-                             (t_u8 **) & pmadapter->priv[i]) !=
-                 MLAN_STATUS_SUCCESS)
-                || !pmadapter->priv[i]) {
+            if (pcb->moal_vmalloc && pcb->moal_vfree)
+                ret =
+                    pcb->moal_vmalloc(pmadapter->pmoal_handle,
+                                      sizeof(mlan_private),
+                                      (t_u8 **) & pmadapter->priv[i]);
+            else
+                ret =
+                    pcb->moal_malloc(pmadapter->pmoal_handle,
+                                     sizeof(mlan_private), MLAN_MEM_DEF,
+                                     (t_u8 **) & pmadapter->priv[i]);
+            if (ret != MLAN_STATUS_SUCCESS || !pmadapter->priv[i]) {
                 ret = MLAN_STATUS_FAILURE;
                 goto error;
             }
@@ -297,8 +309,11 @@ mlan_register(IN pmlan_device pmdevice, OUT t_void ** ppmlan_adapter)
             else if (pmdevice->bss_attr[i].bss_type == MLAN_BSS_TYPE_UAP)
                 pmadapter->priv[i]->bss_role = MLAN_BSS_ROLE_UAP;
 #ifdef WIFI_DIRECT_SUPPORT
-            else if (pmdevice->bss_attr[i].bss_type == MLAN_BSS_TYPE_WIFIDIRECT)
+            else if (pmdevice->bss_attr[i].bss_type == MLAN_BSS_TYPE_WIFIDIRECT) {
                 pmadapter->priv[i]->bss_role = MLAN_BSS_ROLE_STA;
+                if (pmdevice->bss_attr[i].bss_virtual)
+                    pmadapter->priv[i]->bss_virtual = MTRUE;
+            }
 #endif
             /* Save bss_index and bss_num */
             pmadapter->priv[i]->bss_index = i;
@@ -345,11 +360,19 @@ mlan_register(IN pmlan_device pmdevice, OUT t_void ** ppmlan_adapter)
     /* Free lock variables */
     wlan_free_lock_list(pmadapter);
     for (i = 0; i < MLAN_MAX_BSS_NUM; i++) {
-        if (pmadapter->priv[i])
-            pcb->moal_mfree(pmadapter->pmoal_handle,
-                            (t_u8 *) pmadapter->priv[i]);
+        if (pmadapter->priv[i]) {
+            if (pcb->moal_vmalloc && pcb->moal_vfree)
+                pcb->moal_vfree(pmadapter->pmoal_handle,
+                                (t_u8 *) pmadapter->priv[i]);
+            else
+                pcb->moal_mfree(pmadapter->pmoal_handle,
+                                (t_u8 *) pmadapter->priv[i]);
+        }
     }
-    pcb->moal_mfree(pmadapter->pmoal_handle, (t_u8 *) pmadapter);
+    if (pcb->moal_vmalloc && pcb->moal_vfree)
+        pcb->moal_vfree(pmadapter->pmoal_handle, (t_u8 *) pmadapter);
+    else
+        pcb->moal_mfree(pmadapter->pmoal_handle, (t_u8 *) pmadapter);
 
   exit_register:
     LEAVE();
@@ -358,7 +381,7 @@ mlan_register(IN pmlan_device pmdevice, OUT t_void ** ppmlan_adapter)
 
 /**
  *  @brief This function unregisters MOAL from MLAN module.
- *  
+ *
  *  @param pmlan_adapter   A pointer to a mlan_device structure
  *                         allocated in MOAL
  *
@@ -391,13 +414,20 @@ mlan_unregister(IN t_void * pmlan_adapter)
     /* Free private structures */
     for (i = 0; i < pmadapter->priv_num; i++) {
         if (pmadapter->priv[i]) {
-            pcb->moal_mfree(pmadapter->pmoal_handle,
-                            (t_u8 *) pmadapter->priv[i]);
+            if (pcb->moal_vmalloc && pcb->moal_vfree)
+                pcb->moal_vfree(pmadapter->pmoal_handle,
+                                (t_u8 *) pmadapter->priv[i]);
+            else
+                pcb->moal_mfree(pmadapter->pmoal_handle,
+                                (t_u8 *) pmadapter->priv[i]);
         }
     }
 
     /* Free mlan_adapter */
-    pcb->moal_mfree(pmadapter->pmoal_handle, (t_u8 *) pmadapter);
+    if (pcb->moal_vmalloc && pcb->moal_vfree)
+        pcb->moal_vfree(pmadapter->pmoal_handle, (t_u8 *) pmadapter);
+    else
+        pcb->moal_mfree(pmadapter->pmoal_handle, (t_u8 *) pmadapter);
 
     LEAVE();
     return ret;
@@ -405,7 +435,7 @@ mlan_unregister(IN t_void * pmlan_adapter)
 
 /**
  *  @brief This function downloads the firmware
- *  
+ *
  *  @param pmlan_adapter   A pointer to a t_void pointer to store
  *                         mlan_adapter structure pointer
  *  @param pmfw            A pointer to firmware image
@@ -514,7 +544,7 @@ mlan_set_init_param(IN t_void * pmlan_adapter, IN pmlan_init_param pparam)
 
 /**
  *  @brief This function initializes the firmware
- *  
+ *
  *  @param pmlan_adapter   A pointer to a t_void pointer to store
  *                         mlan_adapter structure pointer
  *
@@ -596,22 +626,9 @@ mlan_shutdown_fw(IN t_void * pmlan_adapter)
 
     pcb = &pmadapter->callbacks;
 
-    if (pcb->moal_spin_lock(pmadapter->pmoal_handle, pmadapter->pmlan_lock)
-        != MLAN_STATUS_SUCCESS) {
-        ret = MLAN_STATUS_FAILURE;
-        goto exit_shutdown_fw;
-    }
-
-    if (pcb->moal_spin_unlock(pmadapter->pmoal_handle, pmadapter->pmlan_lock)
-        != MLAN_STATUS_SUCCESS) {
-        ret = MLAN_STATUS_FAILURE;
-        goto exit_shutdown_fw;
-    }
-
     /* Notify completion */
     ret = wlan_shutdown_fw_complete(pmadapter);
 
-  exit_shutdown_fw:
     LEAVE();
     return ret;
 }
@@ -640,6 +657,7 @@ mlan_main_process(IN t_void * pmlan_adapter)
 
     /* Check if already processing */
     if (pmadapter->mlan_processing) {
+        pmadapter->more_task_flag = MTRUE;
         pcb->moal_spin_unlock(pmadapter->pmoal_handle,
                               pmadapter->pmain_proc_lock);
         goto exit_main_proc;
@@ -650,6 +668,11 @@ mlan_main_process(IN t_void * pmlan_adapter)
     }
   process_start:
     do {
+        pcb->moal_spin_lock(pmadapter->pmoal_handle,
+                            pmadapter->pmain_proc_lock);
+        pmadapter->more_task_flag = MFALSE;
+        pcb->moal_spin_unlock(pmadapter->pmoal_handle,
+                              pmadapter->pmain_proc_lock);
         /* Is MLAN shutting down or not ready? */
         if ((pmadapter->hw_status == WlanHardwareStatusClosing) ||
             (pmadapter->hw_status == WlanHardwareStatusNotReady))
@@ -734,7 +757,7 @@ mlan_main_process(IN t_void * pmlan_adapter)
             }
         }
 
-        /* 
+        /*
          * The ps_state may have been changed during processing of
          * Sleep Request event.
          */
@@ -796,10 +819,12 @@ mlan_main_process(IN t_void * pmlan_adapter)
 
     } while (MTRUE);
 
-    if ((pmadapter->sdio_ireg) || IS_CARD_RX_RCVD(pmadapter)) {
+    pcb->moal_spin_lock(pmadapter->pmoal_handle, pmadapter->pmain_proc_lock);
+    if (pmadapter->more_task_flag == MTRUE) {
+        pcb->moal_spin_unlock(pmadapter->pmoal_handle,
+                              pmadapter->pmain_proc_lock);
         goto process_start;
     }
-    pcb->moal_spin_lock(pmadapter->pmoal_handle, pmadapter->pmain_proc_lock);
     pmadapter->mlan_processing = MFALSE;
     pcb->moal_spin_unlock(pmadapter->pmoal_handle, pmadapter->pmain_proc_lock);
 
@@ -854,7 +879,7 @@ mlan_send_packet(IN t_void * pmlan_adapter, IN pmlan_buffer pmbuf)
     return ret;
 }
 
-/** 
+/**
  *  @brief MLAN ioctl handler
  *
  *  @param adapter	A pointer to mlan_adapter structure
@@ -930,9 +955,9 @@ mlan_select_wmm_queue(IN t_void * pmlan_adapter, IN t_u8 bss_num, IN t_u8 tid)
     return ret;
 }
 
-/** 
+/**
  *  @brief This function gets interrupt status.
- *  
+ *
  *  @param adapter  A pointer to mlan_adapter structure
  *  @return         N/A
  */

@@ -1,20 +1,20 @@
 /** @file moal_eth_ioctl.h
  *
  * @brief This file contains definition for private IOCTL call.
- *  
- * Copyright (C) 2012, Marvell International Ltd.  
  *
- * This software file (the "File") is distributed by Marvell International 
- * Ltd. under the terms of the GNU General Public License Version 2, June 1991 
- * (the "License").  You may use, redistribute and/or modify this File in 
- * accordance with the terms and conditions of the License, a copy of which 
+ * Copyright (C) 2012, Marvell International Ltd.
+ *
+ * This software file (the "File") is distributed by Marvell International
+ * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+ * (the "License").  You may use, redistribute and/or modify this File in
+ * accordance with the terms and conditions of the License, a copy of which
  * is available by writing to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA or on the
  * worldwide web at http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
  *
- * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE 
- * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about 
+ * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
+ * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
  * this warranty disclaimer.
  *
  */
@@ -70,6 +70,7 @@ Change log:
 #ifdef STA_SUPPORT
 #define PRIV_CMD_GETSCANTABLE   "getscantable"
 #define PRIV_CMD_SETUSERSCAN    "setuserscan"
+#define PRIV_CMD_EXTCAPCFG		"extcapcfg"
 #endif
 #define PRIV_CMD_DEEPSLEEP      "deepsleep"
 #define PRIV_CMD_IPADDR         "ipaddr"
@@ -111,7 +112,14 @@ Change log:
 #define PRIV_CMD_HOTSPOTCFG     "hotspotcfg"
 #define PRIV_CMD_MGMT_FRAME_CTRL  "mgmtframectrl"
 #define PRIV_CMD_QCONFIG        "qconfig"
+#define PRIV_CMD_QOS_CFG        "qoscfg"
 #define PRIV_CMD_MAC_CTRL       "macctrl"
+#define PRIV_CMD_GETWAP         "getwap"
+#define PRIV_CMD_REGION_CODE    "regioncode"
+#define PRIV_CMD_FWMACADDR      "fwmacaddr"
+#if defined(WIFI_DIRECT_SUPPORT)
+#define PRIV_CMD_OFFCHANNEL     "offchannel"
+#endif
 
 /** Private command ID for Android default commands */
 #define	WOAL_ANDROID_DEF_CMD        (SIOCDEVPRIVATE + 1)
@@ -201,7 +209,7 @@ struct mw_param
     t_u16 flags;                /* Various specifc flags (if any) */
 };
 
-/*  
+/*
  *  For all data larger than 16 octets, we need to use a
  *  pointer to memory allocated in user space.
  */
@@ -213,7 +221,7 @@ struct mw_point
 };
 
 /*
- * This structure defines the payload of an ioctl, and is used 
+ * This structure defines the payload of an ioctl, and is used
  * below.
  */
 union mwreq_data

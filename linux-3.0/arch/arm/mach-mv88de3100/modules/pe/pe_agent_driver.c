@@ -76,7 +76,7 @@ static long pe_agent_driver_ioctl_unlocked(struct file *filp, unsigned int cmd,
   Macro Defined
   */
 
-#if 1
+#if 0
 #define pe_agent_debug(...)   printk(KERN_DEBUG PE_AGENT_DEVICE_TAG __VA_ARGS__)
 #else
 #define pe_agent_debug(...)

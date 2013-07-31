@@ -133,7 +133,7 @@ channels for 11J JP 10M channel gap */
 /********************************************************
                 Local Functions
 ********************************************************/
-
+#if defined(UAP_SUPPORT)
 /**
  *  @brief This function converts region string to integer code
  *
@@ -164,6 +164,7 @@ wlan_11d_region_2_code(pmlan_adapter pmadapter, t_u8 * region, OUT t_u8 * code)
     LEAVE();
     return MLAN_STATUS_FAILURE;
 }
+#endif
 
 #ifdef STA_SUPPORT
 /**
@@ -520,14 +521,14 @@ wlan_11d_process_country_info(mlan_private * pmpriv,
     }
 
     if (parsed_region_chan->no_of_chan != 0) {
-        /* 
+        /*
          * Check if the channel number already exists in the
          * chan-power table of parsed_region_chan
          */
         for (i = 0; (i < region_chan.no_of_chan && i < MAX_NO_OF_CHAN); i++) {
             for (j = 0; (j < parsed_region_chan->no_of_chan &&
                          j < MAX_NO_OF_CHAN); j++) {
-                /* 
+                /*
                  * Channel already exists, update the tx power with new tx
                  * power, since country IE is valid here.
                  */
@@ -542,7 +543,7 @@ wlan_11d_process_country_info(mlan_private * pmpriv,
             }
 
             if (j == parsed_region_chan->no_of_chan && j < MAX_NO_OF_CHAN) {
-                /* 
+                /*
                  * Channel does not exist in the channel power table,
                  * update this new chan and tx_power to the channel power table
                  */
@@ -960,7 +961,7 @@ wlan_11d_parse_domain_info(pmlan_adapter pmadapter,
 
     ENTER();
 
-    /* 
+    /*
      * Validation Rules:
      *    1. Valid Region Code
      *    2. First Chan increment
@@ -1331,7 +1332,7 @@ wlan_11d_parse_dnld_countryinfo(mlan_private * pmpriv,
 
                     for (j = 0; ((j < region_chan.no_of_chan)
                                  && (j < MAX_NO_OF_CHAN)); j++) {
-                        /* 
+                        /*
                          * Channel already exists, use minimum of existing
                          * tx power and tx_power received from
                          * country info of the current AP
@@ -1434,7 +1435,7 @@ wlan_11d_cfg_domain_info(IN pmlan_adapter pmadapter,
     mlan_private *pmpriv = pmadapter->priv[pioctl_req->bss_index];
     mlan_ds_11d_domain_info *domain_info = MNULL;
     mlan_ds_11d_cfg *cfg_11d = MNULL;
-    t_u8 region_code = 0;
+    t_u8 cfp_bg = 0, cfp_a = 0;
 
     ENTER();
 
@@ -1442,14 +1443,29 @@ wlan_11d_cfg_domain_info(IN pmlan_adapter pmadapter,
     domain_info = &cfg_11d->param.domain_info;
 
     /* Update region code and table based on country code */
-    if (wlan_11d_region_2_code(pmadapter, domain_info->country_code,
-                               &region_code) == MLAN_STATUS_SUCCESS) {
-        pmadapter->region_code = region_code;
-        ret = wlan_set_regiontable(pmpriv, region_code, pmadapter->fw_bands);
-        if (ret != MLAN_STATUS_SUCCESS)
-            goto done;
+    if (wlan_misc_country_2_cfp_table_code(pmadapter,
+                                           domain_info->country_code, &cfp_bg,
+                                           &cfp_a)) {
+        PRINTM(MERROR, "Country code not found!\n");
+        pioctl_req->status_code = MLAN_ERROR_INVALID_PARAMETER;
+        ret = MLAN_STATUS_FAILURE;
+        goto done;
     }
-
+    pmadapter->cfp_code_bg = cfp_bg;
+    pmadapter->cfp_code_a = cfp_a;
+    if (cfp_bg && cfp_a && (cfp_bg == cfp_a))
+        pmadapter->region_code = cfp_a;
+    else
+        pmadapter->region_code = 0;
+    if (wlan_set_regiontable(pmpriv, pmadapter->region_code,
+                             pmadapter->config_bands | pmadapter->
+                             adhoc_start_band)) {
+        pioctl_req->status_code = MLAN_ERROR_INVALID_PARAMETER;
+        ret = MLAN_STATUS_FAILURE;
+        goto done;
+    }
+    memcpy(pmadapter, pmadapter->country_code, domain_info->country_code,
+           COUNTRY_CODE_LEN);
     wlan_11d_set_domain_info(pmpriv, domain_info->band,
                              domain_info->country_code,
                              domain_info->no_of_sub_band,

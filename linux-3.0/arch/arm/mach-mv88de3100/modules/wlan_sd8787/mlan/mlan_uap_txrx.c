@@ -1,20 +1,20 @@
 /** @file mlan_uap_txrx.c
  *
  *  @brief This file contains AP mode transmit and receive functions
- * 
- *  Copyright (C) 2009-2011, Marvell International Ltd. 
- *   
- *  This software file (the "File") is distributed by Marvell International 
- *  Ltd. under the terms of the GNU General Public License Version 2, June 1991 
- *  (the "License").  You may use, redistribute and/or modify this File in 
- *  accordance with the terms and conditions of the License, a copy of which 
+ *
+ *  Copyright (C) 2009-2011, Marvell International Ltd.
+ *
+ *  This software file (the "File") is distributed by Marvell International
+ *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
+ *  (the "License").  You may use, redistribute and/or modify this File in
+ *  accordance with the terms and conditions of the License, a copy of which
  *  is available by writing to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA or on the
  *  worldwide web at http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
  *
- *  THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE 
- *  IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE 
- *  ARE EXPRESSLY DISCLAIMED.  The License provides additional details about 
+ *  THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
  *  this warranty disclaimer.
  */
 
@@ -43,7 +43,7 @@ Change log:
 /**
  *  @brief This function processes received packet and forwards it
  *  		to kernel/upper layer
- *  
+ *
  *  @param pmadapter A pointer to mlan_adapter
  *  @param pmbuf     A pointer to mlan_buffer which includes the received packet
  *
@@ -93,7 +93,7 @@ wlan_upload_uap_rx_packet(pmlan_adapter pmadapter, pmlan_buffer pmbuf)
 
 /**
  *  @brief This function will check if unicast packet need be dropped
- *  
+ *
  *  @param priv    A pointer to mlan_private
  *  @param mac     mac address to find in station list table
  *
@@ -138,9 +138,9 @@ wlan_check_unicast_packet(mlan_private * priv, t_u8 * mac)
 /********************************************************
     Global Functions
 ********************************************************/
-/** 
- *  @brief This function fill the txpd for tx packet  
- *  
+/**
+ *  @brief This function fill the txpd for tx packet
+ *
  *  @param priv	   A pointer to mlan_private structure
  *  @param pmbuf   A pointer to the mlan_buffer for process
  *
@@ -200,7 +200,7 @@ wlan_ops_uap_process_txpd(IN t_void * priv, IN pmlan_buffer pmbuf)
         wlan_wmm_compute_driver_packet_delay(pmpriv, pmbuf);
 
     if (plocal_tx_pd->priority < NELEMENTS(pmpriv->wmm.user_pri_pkt_tx_ctrl))
-        /* 
+        /*
          * Set the priority specific tx_control field, setting of 0 will
          *   cause the default value to be used later in this function
          */
@@ -236,7 +236,7 @@ wlan_ops_uap_process_txpd(IN t_void * priv, IN pmlan_buffer pmbuf)
 /**
  *  @brief This function processes received packet and forwards it
  *  		to kernel/upper layer
- *  
+ *
  *  @param adapter   A pointer to mlan_adapter
  *  @param pmbuf     A pointer to mlan_buffer which includes the received packet
  *
@@ -332,8 +332,8 @@ wlan_ops_uap_process_rx_packet(IN t_void * adapter, IN pmlan_buffer pmbuf)
 
 /**
  *  @brief This function processes received packet and forwards it
- *  		to kernel/upper layer or send back to firmware 
- *  
+ *  		to kernel/upper layer or send back to firmware
+ *
  *  @param priv      A pointer to mlan_private
  *  @param pmbuf     A pointer to mlan_buffer which includes the received packet
  *
@@ -439,8 +439,8 @@ wlan_uap_recv_packet(IN mlan_private * priv, IN pmlan_buffer pmbuf)
 
 /**
  *  @brief This function processes received packet and forwards it
- *  		to kernel/upper layer or send back to firmware 
- *  
+ *  		to kernel/upper layer or send back to firmware
+ *
  *  @param priv      A pointer to mlan_private
  *  @param pmbuf     A pointer to mlan_buffer which includes the received packet
  *
@@ -533,6 +533,7 @@ wlan_process_uap_rx_packet(IN mlan_private * priv, IN pmlan_buffer pmbuf)
             goto done;
         }
     }
+
   upload:
     /* Chop off RxPD */
     pmbuf->data_len -= prx_pd->rx_pkt_offset;

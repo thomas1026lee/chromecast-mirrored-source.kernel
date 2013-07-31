@@ -2,8 +2,8 @@
  *
  *  @brief This file contains the handling of RX in MLAN
  *  module.
- * 
- *  Copyright (C) 2008-2011, Marvell International Ltd. 
+ *
+ *  Copyright (C) 2008-2011, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -217,9 +217,9 @@ static void mlan_hist_data_set(t_s8 rxRate, t_s8 snr, t_s8 nflr)
 /********************************************************
 		Global functions
 ********************************************************/
-/** 
+/**
  *  @brief This function check and discard IPv4 and IPv6 gratuitous broadcast packets
- *  
+ *
  *  @param prx_pkt     A pointer to RxPacketHdr_t structure of received packet
  *  @param pmadapter   A pointer to pmlan_adapter structure
  *  @return            TRUE if found such type of packets, FALSE not found
@@ -266,7 +266,7 @@ discard_gratuitous_ARP_msg(RxPacketHdr_t * prx_pkt, pmlan_adapter pmadapter)
 /**
  *  @brief This function processes received packet and forwards it
  *  		to kernel/upper layer
- *  
+ *
  *  @param pmadapter A pointer to mlan_adapter
  *  @param pmbuf     A pointer to mlan_buffer which includes the received packet
  *
@@ -287,32 +287,12 @@ wlan_process_rx_packet(pmlan_adapter pmadapter, pmlan_buffer pmbuf)
         { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0xf8 };
     t_u8 appletalk_aarp_type[2] = { 0x80, 0xf3 };
     t_u8 ipx_snap_type[2] = { 0x81, 0x37 };
+    t_u8 adj_rx_rate = 0;
 
     ENTER();
 
     prx_pd = (RxPD *) (pmbuf->pbuf + pmbuf->data_offset);
     prx_pkt = (RxPacketHdr_t *) ((t_u8 *) prx_pd + prx_pd->rx_pkt_offset);
-
-    if (pmlan_hist)
-    {
-		unsigned long curr_size;
-		curr_size = atomic_read(&(pmlan_hist->num_samples));
-		if (curr_size > MLAN_HIST_MAX_SAMPLES)
-		{
-			mlan_hist_data_reset();
-		}
-
-		mlan_hist_data_set( prx_pd->rx_rate, prx_pd->snr, prx_pd->nf);
-	}
-	else
-	{
-		pmlan_hist = (mlan_hgm_data *) kmalloc(sizeof(mlan_hgm_data),GFP_KERNEL);
-
-		if (pmlan_hist){
-			mlan_hist_data_reset();
-			mlan_hist_data_set( prx_pd->rx_rate, prx_pd->snr, prx_pd->nf);
-		}
-	}
 
 /** Small debug type */
 #define DBG_TYPE_SMALL  2
@@ -324,7 +304,7 @@ wlan_process_rx_packet(pmlan_adapter pmadapter, pmlan_buffer pmbuf)
         if (dbgType == DBG_TYPE_SMALL) {
             PRINTM(MFW_D, "\n");
             DBG_HEXDUMP(MFW_D, "FWDBG",
-                        (t_s8 *) ((t_u8 *) & prx_pkt->eth803_hdr +
+                        (char *) ((t_u8 *) & prx_pkt->eth803_hdr +
                                   SIZE_OF_DBG_STRUCT), prx_pd->rx_pkt_length);
             PRINTM(MFW_D, "FWDBG::\n");
         }
@@ -348,8 +328,8 @@ wlan_process_rx_packet(pmlan_adapter pmadapter, pmlan_buffer pmbuf)
                 appletalk_aarp_type, sizeof(appletalk_aarp_type)) &&
          memcmp(pmadapter, &prx_pkt->rfc1042_hdr.snap_type,
                 ipx_snap_type, sizeof(ipx_snap_type)))) {
-        /* 
-         *  Replace the 803 header and rfc1042 header (llc/snap) with an 
+        /*
+         *  Replace the 803 header and rfc1042 header (llc/snap) with an
          *    EthernetII header, keep the src/dst and snap_type (ethertype).
          *  The firmware only passes up SNAP frames converting
          *    all RX Data from 802.11 to 802.2/LLC/SNAP frames.
@@ -368,7 +348,7 @@ wlan_process_rx_packet(pmlan_adapter pmadapter, pmlan_buffer pmbuf)
         memcpy(pmadapter, peth_hdr->dest_addr, prx_pkt->eth803_hdr.dest_addr,
                sizeof(peth_hdr->dest_addr));
 
-        /* Chop off the RxPD + the excess memory from the 802.2/llc/snap header 
+        /* Chop off the RxPD + the excess memory from the 802.2/llc/snap header
            that was removed. */
         hdr_chop = (t_u32) ((t_ptr) peth_hdr - (t_ptr) prx_pd);
     } else {
@@ -397,8 +377,42 @@ wlan_process_rx_packet(pmlan_adapter pmadapter, pmlan_buffer pmbuf)
                 MIN(prx_pd->rx_pkt_length, MAX_DATA_DUMP_LEN));
 
     priv->rxpd_rate = prx_pd->rx_rate;
-
     priv->rxpd_htinfo = prx_pd->ht_info;
+
+
+    if (priv->rxpd_htinfo & MBIT(0)){ //Check for 11n HT20 rates
+        adj_rx_rate = priv->rxpd_rate + MLAN_RATE_INDEX_MCS0;
+        PRINTM(MDATA,"wlan_process_rx_packet(): HT20 Rate! ht_info:%x Rx Rate:%d adj_rate:%d\n",
+                priv->rxpd_htinfo,priv->rxpd_rate,adj_rx_rate);
+    }
+    else { //BG rates
+        adj_rx_rate = (priv->rxpd_rate > MLAN_RATE_INDEX_OFDM0) ? priv->rxpd_rate - 1 : priv->rxpd_rate;
+        PRINTM(MDATA,"wlan_process_rx_packet(): HT20 Rate! ht_info:%x Rx Rate:%d adj_rate:%d\n",
+                priv->rxpd_htinfo,priv->rxpd_rate,adj_rx_rate);
+    }
+
+    if (pmlan_hist)
+    {
+        unsigned long curr_size;
+        curr_size = atomic_read(&(pmlan_hist->num_samples));
+        if (curr_size > MLAN_HIST_MAX_SAMPLES)
+        {
+            mlan_hist_data_reset();
+        }
+
+        mlan_hist_data_set( adj_rx_rate, prx_pd->snr, prx_pd->nf);
+    }
+    else
+    {
+        pmlan_hist = (mlan_hgm_data *) kmalloc(sizeof(mlan_hgm_data),GFP_KERNEL);
+
+        if (pmlan_hist){
+            mlan_hist_data_reset();
+            mlan_hist_data_set( adj_rx_rate, prx_pd->snr, prx_pd->nf);
+        }
+    }
+
+
     pmadapter->callbacks.moal_get_system_time(pmadapter->pmoal_handle,
                                               &pmbuf->out_ts_sec,
                                               &pmbuf->out_ts_usec);
@@ -423,7 +437,7 @@ wlan_process_rx_packet(pmlan_adapter pmadapter, pmlan_buffer pmbuf)
 
 /**
  *   @brief This function processes the received buffer
- *     
+ *
  *   @param adapter A pointer to mlan_adapter
  *   @param pmbuf     A pointer to the received buffer
  *
@@ -481,7 +495,7 @@ wlan_ops_sta_process_rx_packet(IN t_void * adapter, IN pmlan_buffer pmbuf)
         goto done;
     }
 
-    /* 
+    /*
      * If the packet is not an unicast packet then send the packet
      * directly to os. Don't pass thru rx reordering
      */

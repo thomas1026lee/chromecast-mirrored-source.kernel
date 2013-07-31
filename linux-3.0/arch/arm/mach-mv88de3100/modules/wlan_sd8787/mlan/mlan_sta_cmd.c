@@ -4,7 +4,7 @@
  *  it prepares command and sends it to firmware when
  *  it is ready.
  *
- *  Copyright (C) 2008-2011, Marvell International Ltd. 
+ *  Copyright (C) 2008-2011, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -49,9 +49,9 @@ Change log:
                 Local Functions
 ********************************************************/
 
-/** 
+/**
  *  @brief This function prepares command of RSSI info.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param pcmd         A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   Command action
@@ -85,9 +85,9 @@ wlan_cmd_802_11_rssi_info(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of snmp_mib.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -202,9 +202,9 @@ wlan_cmd_802_11_snmp_mib(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of get_log.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *
@@ -220,9 +220,9 @@ wlan_cmd_802_11_get_log(IN pmlan_private pmpriv, IN HostCmd_DS_COMMAND * cmd)
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of tx_power_cfg.
- *   
+ *
  *  @param pmpriv      A pointer to mlan_private structure
  *  @param cmd         A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action  The action: GET or SET
@@ -279,9 +279,9 @@ wlan_cmd_tx_power_cfg(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of rf_tx_power.
- *    
+ *
  *  @param pmpriv     A pointer to wlan_private structure
  *  @param cmd        A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action the action: GET or SET
@@ -321,9 +321,9 @@ wlan_cmd_802_11_rf_tx_power(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  * @brief This function prepares command of hs_cfg.
- *   
+ *
  * @param pmpriv       A pointer to mlan_private structure
  * @param cmd          A pointer to HostCmd_DS_COMMAND structure
  * @param cmd_action   The action: GET or SET
@@ -339,6 +339,8 @@ wlan_cmd_802_11_hs_cfg(IN pmlan_private pmpriv,
     pmlan_adapter pmadapter = pmpriv->adapter;
     HostCmd_DS_802_11_HS_CFG_ENH *phs_cfg = &cmd->params.opt_hs_cfg;
     t_u16 hs_activate = MFALSE;
+    t_u8 *tlv = (t_u8 *) phs_cfg + sizeof(HostCmd_DS_802_11_HS_CFG_ENH);
+    MrvlIEtypes_HsWakeHoldoff_t *holdoff_tlv = MNULL;
 
     ENTER();
 
@@ -357,14 +359,16 @@ wlan_cmd_802_11_hs_cfg(IN pmlan_private pmpriv,
                ((t_u8 *) phs_cfg) + sizeof(HostCmd_DS_802_11_HS_CFG_ENH),
                pmadapter->arp_filter, pmadapter->arp_filter_size);
         cmd->size =
-            (t_u16) wlan_cpu_to_le16(pmadapter->arp_filter_size +
-                                     sizeof(HostCmd_DS_802_11_HS_CFG_ENH) +
-                                     S_DS_GEN);
+            pmadapter->arp_filter_size + sizeof(HostCmd_DS_802_11_HS_CFG_ENH) +
+            S_DS_GEN;
+        tlv =
+            (t_u8 *) phs_cfg + sizeof(HostCmd_DS_802_11_HS_CFG_ENH) +
+            pmadapter->arp_filter_size;
     } else
-        cmd->size =
-            wlan_cpu_to_le16(S_DS_GEN + sizeof(HostCmd_DS_802_11_HS_CFG_ENH));
+        cmd->size = S_DS_GEN + sizeof(HostCmd_DS_802_11_HS_CFG_ENH);
 
     if (hs_activate) {
+        cmd->size = wlan_cpu_to_le16(cmd->size);
         phs_cfg->action = wlan_cpu_to_le16(HS_ACTIVATE);
         phs_cfg->params.hs_activate.resp_ctrl = wlan_cpu_to_le16(RESP_NEEDED);
     } else {
@@ -373,18 +377,33 @@ wlan_cmd_802_11_hs_cfg(IN pmlan_private pmpriv,
             wlan_cpu_to_le32(pdata_buf->conditions);
         phs_cfg->params.hs_config.gpio = pdata_buf->gpio;
         phs_cfg->params.hs_config.gap = pdata_buf->gap;
-        PRINTM(MCMND, "HS_CFG_CMD: condition:0x%x gpio:0x%x gap:0x%x\n",
+        if (pmadapter->min_wake_holdoff) {
+            cmd->size += sizeof(MrvlIEtypes_HsWakeHoldoff_t);
+            holdoff_tlv = (MrvlIEtypes_HsWakeHoldoff_t *) tlv;
+            holdoff_tlv->header.type =
+                wlan_cpu_to_le16(TLV_TYPE_HS_WAKE_HOLDOFF);
+            holdoff_tlv->header.len =
+                wlan_cpu_to_le16(sizeof(MrvlIEtypes_HsWakeHoldoff_t) -
+                                 sizeof(MrvlIEtypesHeader_t));
+            holdoff_tlv->min_wake_holdoff =
+                wlan_cpu_to_le16(pmadapter->min_wake_holdoff);
+            PRINTM(MCMND, "min_wake_holdoff=%d\n", pmadapter->min_wake_holdoff);
+        }
+        cmd->size = wlan_cpu_to_le16(cmd->size);
+        PRINTM(MCMND,
+               "HS_CFG_CMD: condition:0x%x gpio:0x%x gap:0x%x holdoff=%d\n",
                phs_cfg->params.hs_config.conditions,
-               phs_cfg->params.hs_config.gpio, phs_cfg->params.hs_config.gap);
+               phs_cfg->params.hs_config.gpio, phs_cfg->params.hs_config.gap,
+               pmadapter->min_wake_holdoff);
     }
 
     LEAVE();
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of mac_address.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -485,9 +504,9 @@ wlan_cmd_802_11_sleep_params(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of mac_multicast_adr.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -586,9 +605,9 @@ wlan_cmd_802_11_ad_hoc_stop(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function sets WEP key(s) to key_param_set TLV(s).
- *  
+ *
  *  @param priv           	A pointer to mlan_private structure
  *  @param key_param_set    A pointer to MrvlIEtype_KeyParamSet_t structure
  *  @param key_param_len    A pointer to the length variable
@@ -654,9 +673,9 @@ wlan_set_keyparamset_wep(mlan_private * priv,
     return ret;
 }
 
-/** 
+/**
  *  @brief This function prepares command of key_material.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -734,10 +753,10 @@ wlan_cmd_802_11_key_material(IN pmlan_private pmpriv,
         else
             pkey_material->key_param_set.key[1] = 0;    /* set 0 when re-key */
 
-        if (0 != memcmp(pmpriv->adapter, pkey->mac_addr, bc_mac, sizeof(bc_mac)))       /* WAPI 
-                                                                                           pairwise 
-                                                                                           key: 
-                                                                                           unicast 
+        if (0 != memcmp(pmpriv->adapter, pkey->mac_addr, bc_mac, sizeof(bc_mac)))       /* WAPI
+                                                                                           pairwise
+                                                                                           key:
+                                                                                           unicast
                                                                                          */
             pkey_material->key_param_set.key_info |=
                 wlan_cpu_to_le16(KEY_INFO_WAPI_UNICAST);
@@ -859,9 +878,9 @@ wlan_cmd_802_11_key_material(IN pmlan_private pmpriv,
     return ret;
 }
 
-/** 
+/**
  *  @brief This function prepares command of supplicant pmk
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -885,26 +904,26 @@ wlan_cmd_802_11_supplicant_pmk(IN pmlan_private pmpriv,
     t_u8 zero_mac[] = { 0, 0, 0, 0, 0, 0 };
 
     ENTER();
-    /* 
+    /*
      * Parse the rest of the buf here
-     *      1)  <ssid="valid ssid"> - This will get the passphrase, AKMP 
+     *      1)  <ssid="valid ssid"> - This will get the passphrase, AKMP
      *          for specified ssid, if none specified then it will get all.
      *          Eg: iwpriv <mlanX> passphrase 0:ssid=marvell
      *      2)  <psk="psk">:<passphrase="passphare">:<bssid="00:50:43:ef:23:f3">
-     *          <ssid="valid ssid"> - passphrase and psk cannot be provided to  
-     *          the same SSID, Takes one SSID at a time, If ssid= is present 
+     *          <ssid="valid ssid"> - passphrase and psk cannot be provided to
+     *          the same SSID, Takes one SSID at a time, If ssid= is present
      *          the it should contain a passphrase or psk. If no arguments are
      *          provided then AKMP=802.1x, and passphrase should be provided
      *          after association.
      *          End of each parameter should be followed by a ':'(except for the
-     *          last parameter) as the delimiter. If ':' has to be used in 
+     *          last parameter) as the delimiter. If ':' has to be used in
      *          an SSID then a '/' should be preceded to ':' as a escape.
-     *          Eg:iwpriv <mlanX> passphrase 
+     *          Eg:iwpriv <mlanX> passphrase
      *                    "1:ssid=mrvl AP:psk=abcdefgh:bssid=00:50:43:ef:23:f3"
-     *          iwpriv <mlanX> passphrase 
+     *          iwpriv <mlanX> passphrase
      *                 "1:ssid=mrvl/: AP:psk=abcdefgd:bssid=00:50:43:ef:23:f3"
      *          iwpriv <mlanX> passphrase "1:ssid=mrvlAP:psk=abcdefgd"
-     *      3)  <ssid="valid ssid"> - This will clear the passphrase 
+     *      3)  <ssid="valid ssid"> - This will clear the passphrase
      *          for specified ssid, if none specified then it will clear all.
      *          Eg: iwpriv <mlanX> passphrase 2:ssid=marvell
      */
@@ -1045,9 +1064,9 @@ wlan_cmd_802_11_supplicant_profile(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of rf_channel.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -1082,9 +1101,9 @@ wlan_cmd_802_11_rf_channel(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of ibss_coalescing_status.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -1125,9 +1144,9 @@ wlan_cmd_ibss_coalescing_status(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of mgmt IE list.
- *  
+ *
  *  @param pmpriv       A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   The action: GET or SET
@@ -1188,9 +1207,9 @@ wlan_cmd_mgmt_ie_list(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares system clock cfg command
- *  
+ *
  *  @param pmpriv    	A pointer to mlan_private structure
  *  @param cmd	   	A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action 	The action: GET or SET
@@ -1223,9 +1242,9 @@ wlan_cmd_sysclock_cfg(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of subscribe event.
- *  
+ *
  *  @param pmpriv    	A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   the action: GET or SET
@@ -1262,8 +1281,7 @@ wlan_cmd_subscribe_event(IN pmlan_private pmpriv,
     cmd_size = sizeof(HostCmd_DS_SUBSCRIBE_EVENT) + S_DS_GEN;
     if (cmd_action == HostCmd_ACT_GEN_GET)
         goto done;
-#define HostCmd_ACT_BITWISE_SET	0x02
-    evt->action = wlan_cpu_to_le16(HostCmd_ACT_BITWISE_SET);
+    evt->action = wlan_cpu_to_le16(sub_evt->evt_action);
     evt->event_bitmap = wlan_cpu_to_le16(sub_evt->evt_bitmap);
     tlv = (t_u8 *) cmd + cmd_size;
     if (sub_evt->evt_bitmap & SUBSCRIBE_EVT_RSSI_LOW) {
@@ -1411,9 +1429,9 @@ wlan_cmd_subscribe_event(IN pmlan_private pmpriv,
     return MLAN_STATUS_SUCCESS;
 }
 
-/** 
+/**
  *  @brief This function prepares command of OTP user data.
- *  
+ *
  *  @param pmpriv    	A pointer to mlan_private structure
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   the action: GET or SET
@@ -1449,7 +1467,7 @@ wlan_cmd_otp_user_data(IN pmlan_private pmpriv,
 
 /**
  *  @brief This function prepares inactivity timeout command
- *  
+ *
  *  @param cmd          A pointer to HostCmd_DS_COMMAND structure
  *  @param cmd_action   the action: GET or SET
  *  @param pdata_buf    A pointer to data buffer
@@ -1489,9 +1507,9 @@ wlan_cmd_inactivity_timeout(IN HostCmd_DS_COMMAND * cmd,
                 Global Functions
 ********************************************************/
 
-/** 
+/**
  *  @brief This function prepare the command before sending to firmware.
- *  
+ *
  *  @param priv       A pointer to mlan_private structure
  *  @param cmd_no       Command number
  *  @param cmd_action   Command action: GET or SET
@@ -1626,7 +1644,8 @@ wlan_ops_sta_prepare_cmd(IN t_void * priv,
         cmd_ptr->params.rx_mgmt_ind.action = wlan_cpu_to_le16(cmd_action);
         cmd_ptr->params.rx_mgmt_ind.mgmt_subtype_mask =
             wlan_cpu_to_le32((t_u32) (*((t_u32 *) pdata_buf)));
-        cmd_ptr->size = wlan_cpu_to_le16(sizeof(t_u32) + S_DS_GEN);
+        cmd_ptr->size =
+            wlan_cpu_to_le16(sizeof(HostCmd_DS_RX_MGMT_IND) + S_DS_GEN);
         break;
     case HostCmd_CMD_802_11_RF_CHANNEL:
         ret =

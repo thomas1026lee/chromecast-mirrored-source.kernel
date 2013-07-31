@@ -1,9 +1,9 @@
 /** @file mlan_ieee.h
  *
- *  @brief This file contains IEEE information element related 
+ *  @brief This file contains IEEE information element related
  *  definitions used in MLAN and MOAL module.
  *
- *  Copyright (C) 2008-2011, Marvell International Ltd. 
+ *  Copyright (C) 2008-2011, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -154,6 +154,15 @@ typedef MLAN_PACK_START struct _IEEEtypes_Generic_t
     t_u8 data[IEEE_MAX_IE_SIZE - sizeof(IEEEtypes_Header_t)];
 }
 MLAN_PACK_END IEEEtypes_Generic_t, *pIEEEtypes_Generic_t;
+
+/** TLV header */
+typedef MLAN_PACK_START struct _TLV_Generic_t
+{
+    /** Type */
+    t_u16 type;
+    /** Length */
+    t_u16 len;
+} MLAN_PACK_END TLV_Generic_t, *pTLV_Generic_t;
 
 /** Capability information mask */
 #define CAPINFO_MASK    (~(MBIT(15) | MBIT(14) |            \
@@ -329,6 +338,8 @@ typedef t_u8 WLAN_802_11_RATES[WLAN_SUPPORTED_RATES];
 #define RSN_AKM_8021X		1
 /** AKM: PSK */
 #define RSN_AKM_PSK     	2
+/** AKM: PSK SHA256 */
+#define RSN_AKM_PSK_SHA256	6
 
 /** wpa_suite_t */
 typedef MLAN_PACK_START struct _wpa_suite_t
@@ -458,7 +469,7 @@ typedef MLAN_PACK_START struct _IEEEtypes_WmmInfo_t
     /**
      * WMM Info IE - Vendor Specific Header:
      *   element_id  [221/0xdd]
-     *   Len         [7] 
+     *   Len         [7]
      *   Oui         [00:50:f2]
      *   OuiType     [2]
      *   OuiSubType  [0]
@@ -477,7 +488,7 @@ typedef MLAN_PACK_START struct _IEEEtypes_WmmParameter_t
     /**
      * WMM Parameter IE - Vendor Specific Header:
      *   element_id  [221/0xdd]
-     *   Len         [24] 
+     *   Len         [24]
      *   Oui         [00:50:f2]
      *   OuiType     [2]
      *   OuiSubType  [1]
@@ -545,8 +556,8 @@ typedef MLAN_PACK_START struct
     IEEEtypes_WMM_TSPEC_TS_Info_PSB_e PowerSaveBehavior:1;      // !
                                                                 // Legacy/Trigg
     t_u8 Aggregation:1;         // ! Reserved
-    t_u8 AccessPolicy2:1;       // ! 
-    t_u8 AccessPolicy1:1;       // ! 
+    t_u8 AccessPolicy2:1;       // !
+    t_u8 AccessPolicy1:1;       // !
     IEEEtypes_WMM_TSPEC_TS_Info_Direction_e Direction:2;
     t_u8 TID:4;                 // ! Unique identifier
     IEEEtypes_WMM_TSPEC_TS_TRAFFIC_TYPE_e TrafficType:1;
@@ -554,8 +565,8 @@ typedef MLAN_PACK_START struct
     IEEEtypes_WMM_TSPEC_TS_TRAFFIC_TYPE_e TrafficType:1;
     t_u8 TID:4;                 // ! Unique identifier
     IEEEtypes_WMM_TSPEC_TS_Info_Direction_e Direction:2;
-    t_u8 AccessPolicy1:1;       // ! 
-    t_u8 AccessPolicy2:1;       // ! 
+    t_u8 AccessPolicy1:1;       // !
+    t_u8 AccessPolicy2:1;       // !
     t_u8 Aggregation:1;         // ! Reserved
     IEEEtypes_WMM_TSPEC_TS_Info_PSB_e PowerSaveBehavior:1;      // !
                                                                 // Legacy/Trigg
@@ -804,46 +815,71 @@ typedef struct MLAN_PACK_START _BSSCo2040_t
 /** Extended Capabilities Data */
 typedef struct MLAN_PACK_START _ExtCap_t
 {
-    t_u8 Qos_Map:1;             /* bit 0 */
-    t_u8 EBR:1;                 /* bit 1 */
-    t_u8 SSPN_Interface:1;      /* bit 2 */
-    t_u8 Reserved35:1;          /* bit 3 */
-    t_u8 MSGCF_Capa:1;          /* bit 4 */
-    t_u8 TDLSSupport:1;         /* bit 5 */
-    t_u8 TDLSProhibited:1;      /* bit 6 */
-    t_u8 TDLSChlSwitchProhib:1; /* bit 7 */
-    t_u8 ChannelUsage:1;        /* bit 8 */
-    t_u8 SSID_List:1;           /* bit 9 */
-    t_u8 DMS:1;                 /* bit 10 */
-    t_u8 UTC:1;                 /* bit 11 */
-    t_u8 TDLSPeerUAPSDSupport:1;        /* bit 12 */
-    t_u8 TDLSPeerPSMSupport:1;  /* bit 13 */
-    t_u8 TDLSChannelSwitching:1;        /* bit 14 */
-    t_u8 Interworking:1;        /* bit 15 */
-    t_u8 TFS:1;                 /* bit 16 */
-    t_u8 WNM_Sleep:1;           /* bit 17 */
-    t_u8 TIM_Broadcast:1;       /* bit 18 */
-    t_u8 BSS_Transition:1;      /* bit 19 */
-    t_u8 QoSTrafficCap:1;       /* bit 20 */
-    t_u8 AC_StationCount:1;     /* bit 21 */
-    t_u8 MultipleBSSID:1;       /* bit 22 */
+    /** Extended Capabilities value */
+    t_u8 rsvdBit63:1;           /* bit 63 */
+    t_u8 OperModeNtf:1;         /* bit 62 */
+    t_u8 TDLSWildBandwidth:1;   /* bit 61 */
+    t_u8 rsvdBit60:1;           /* bit 60 */
+    t_u8 rsvdBit59:1;           /* bit 59 */
+    t_u8 rsvdBit58:1;           /* bit 58 */
+    t_u8 rsvdBit57:1;           /* bit 57 */
+    t_u8 rsvdBit56:1;           /* bit 56 */
+    t_u8 rsvdBit55:1;           /* bit 55 */
+    t_u8 rsvdBit54:1;           /* bit 54 */
+    t_u8 rsvdBit53:1;           /* bit 53 */
+    t_u8 rsvdBit52:1;           /* bit 52 */
+    t_u8 rsvdBit51:1;           /* bit 51 */
+    t_u8 rsvdBit50:1;           /* bit 50 */
+    t_u8 rsvdBit49:1;           /* bit 49 */
+    t_u8 rsvdBit48:1;           /* bit 48 */
+    t_u8 rsvdBit47:1;           /* bit 47 */
+    t_u8 rsvdBit46:1;           /* bit 46 */
+    t_u8 rsvdBit45:1;           /* bit 45 */
+    t_u8 rsvdBit44:1;           /* bit 44 */
+    t_u8 rsvdBit43:1;           /* bit 43 */
+    t_u8 rsvdBit42:1;           /* bit 42 */
+    t_u8 rsvdBit41:1;           /* bit 41 */
+    t_u8 rsvdBit40:1;           /* bit 40 */
+    t_u8 TDLSChlSwitchProhib:1; /* bit 39 */
+    t_u8 TDLSProhibited:1;      /* bit 38 */
+    t_u8 TDLSSupport:1;         /* bit 37 */
+    t_u8 MSGCF_Capa:1;          /* bit 36 */
+    t_u8 Reserved35:1;          /* bit 35 */
+    t_u8 SSPN_Interface:1;      /* bit 34 */
+    t_u8 EBR:1;                 /* bit 33 */
+    t_u8 Qos_Map:1;             /* bit 32 */
+    t_u8 Interworking:1;        /* bit 31 */
+    t_u8 TDLSChannelSwitching:1;        /* bit 30 */
+    t_u8 TDLSPeerPSMSupport:1;  /* bit 29 */
+    t_u8 TDLSPeerUAPSDSupport:1;        /* bit 28 */
+    t_u8 UTC:1;                 /* bit 27 */
+    t_u8 DMS:1;                 /* bit 26 */
+    t_u8 SSID_List:1;           /* bit 25 */
+    t_u8 ChannelUsage:1;        /* bit 24 */
     t_u8 TimingMeasurement:1;   /* bit 23 */
-    t_u8 Diagnostics:1;         /* bit 24 */
-    t_u8 MulticastDiagnostics:1;        /* bit 25 */
-    t_u8 LocationTracking:1;    /* bit 26 */
-    t_u8 FMS:1;                 /* bit 27 */
-    t_u8 ProxyARPService:1;     /* bit 28 */
-    t_u8 CollocatedIntf:1;      /* bit 29 */
-    t_u8 CivicLocation:1;       /* bit 30 */
-    t_u8 GeospatialLocation:1;  /* bit 31 */
-    t_u8 BSS_CoexistSupport:1;  /* bit 32 */
-    t_u8 Reserved1:1;           /* bit 33 */
-    t_u8 ExtChanSwitching:1;    /* bit 34 */
-    t_u8 RejectUnadmFrame:1;    /* bit 35 */
-    t_u8 PSMP_Capable:1;        /* bit 36 */
-    t_u8 Reserved5:1;           /* bit 37 */
-    t_u8 SPSMP_Support:1;       /* bit 38 */
-    t_u8 Event:1;               /* bit 39 */
+    t_u8 MultipleBSSID:1;       /* bit 22 */
+    t_u8 AC_StationCount:1;     /* bit 21 */
+    t_u8 QoSTrafficCap:1;       /* bit 20 */
+    t_u8 BSS_Transition:1;      /* bit 19 */
+    t_u8 TIM_Broadcast:1;       /* bit 18 */
+    t_u8 WNM_Sleep:1;           /* bit 17 */
+    t_u8 TFS:1;                 /* bit 16 */
+    t_u8 GeospatialLocation:1;  /* bit 15 */
+    t_u8 CivicLocation:1;       /* bit 14 */
+    t_u8 CollocatedIntf:1;      /* bit 13 */
+    t_u8 ProxyARPService:1;     /* bit 12 */
+    t_u8 FMS:1;                 /* bit 11 */
+    t_u8 LocationTracking:1;    /* bit 10 */
+    t_u8 MulticastDiagnostics:1;        /* bit 9 */
+    t_u8 Diagnostics:1;         /* bit 8 */
+    t_u8 Event:1;               /* bit 7 */
+    t_u8 SPSMP_Support:1;       /* bit 6 */
+    t_u8 Reserved5:1;           /* bit 5 */
+    t_u8 PSMP_Capable:1;        /* bit 4 */
+    t_u8 RejectUnadmFrame:1;    /* bit 3 */
+    t_u8 ExtChanSwitching:1;    /* bit 2 */
+    t_u8 Reserved1:1;           /* bit 1 */
+    t_u8 BSS_CoexistSupport:1;  /* bit 0 */
 } MLAN_PACK_END ExtCap_t, *pExtCap_t;
 #else
 /** Extended Capabilities Data */
@@ -890,6 +926,30 @@ typedef struct MLAN_PACK_START _ExtCap_t
     t_u8 TDLSSupport:1;         /* bit 37 */
     t_u8 TDLSProhibited:1;      /* bit 38 */
     t_u8 TDLSChlSwitchProhib:1; /* bit 39 */
+    t_u8 rsvdBit40:1;           /* bit 40 */
+    t_u8 rsvdBit41:1;           /* bit 41 */
+    t_u8 rsvdBit42:1;           /* bit 42 */
+    t_u8 rsvdBit43:1;           /* bit 43 */
+    t_u8 rsvdBit44:1;           /* bit 44 */
+    t_u8 rsvdBit45:1;           /* bit 45 */
+    t_u8 rsvdBit46:1;           /* bit 46 */
+    t_u8 rsvdBit47:1;           /* bit 47 */
+    t_u8 rsvdBit48:1;           /* bit 48 */
+    t_u8 rsvdBit49:1;           /* bit 49 */
+    t_u8 rsvdBit50:1;           /* bit 50 */
+    t_u8 rsvdBit51:1;           /* bit 51 */
+    t_u8 rsvdBit52:1;           /* bit 52 */
+    t_u8 rsvdBit53:1;           /* bit 53 */
+    t_u8 rsvdBit54:1;           /* bit 54 */
+    t_u8 rsvdBit55:1;           /* bit 55 */
+    t_u8 rsvdBit56:1;           /* bit 56 */
+    t_u8 rsvdBit57:1;           /* bit 57 */
+    t_u8 rsvdBit58:1;           /* bit 58 */
+    t_u8 rsvdBit59:1;           /* bit 59 */
+    t_u8 rsvdBit60:1;           /* bit 60 */
+    t_u8 TDLSWildBandwidth:1;   /* bit 61 */
+    t_u8 OperModeNtf:1;         /* bit 62 */
+    t_u8 rsvdBit63:1;           /* bit 63 */
 } MLAN_PACK_END ExtCap_t, *pExtCap_t;
 #endif
 
@@ -991,8 +1051,8 @@ typedef MLAN_PACK_START struct
 } MLAN_PACK_END IEEEtypes_TPCReport_t;
 
 /*  IEEE Supported Channel sub-band description (7.3.2.19) */
-/**  
- *  Sub-band description used in the supported channels element. 
+/**
+ *  Sub-band description used in the supported channels element.
  */
 typedef MLAN_PACK_START struct
 {
@@ -1020,7 +1080,7 @@ typedef MLAN_PACK_START struct
 /**
  *  Provided in beacons and probe responses.  Used to advertise when
  *    and to which channel it is changing to.  Only starting STAs in
- *    an IBSS and APs are allowed to originate a chan switch element. 
+ *    an IBSS and APs are allowed to originate a chan switch element.
  */
 typedef MLAN_PACK_START struct
 {
@@ -1034,9 +1094,9 @@ typedef MLAN_PACK_START struct
 
 /*  IEEE Quiet Period Element (7.3.2.23) */
 /**
- *  Provided in beacons and probe responses.  Indicates times during 
+ *  Provided in beacons and probe responses.  Indicates times during
  *    which the STA should not be transmitting data.  Only starting STAs in
- *    an IBSS and APs are allowed to originate a quiet element. 
+ *    an IBSS and APs are allowed to originate a quiet element.
  */
 typedef MLAN_PACK_START struct
 {
@@ -1074,8 +1134,8 @@ typedef MLAN_PACK_START struct
 
 /*  IEEE DFS Channel Map field (7.3.2.24) */
 /**
- *  Used to list supported channels and provide a octet "map" field which 
- *    contains a basic measurement report for that channel in the 
+ *  Used to list supported channels and provide a octet "map" field which
+ *    contains a basic measurement report for that channel in the
  *    IEEEtypes_IBSS_DFS_t element
  */
 typedef MLAN_PACK_START struct
@@ -1087,7 +1147,7 @@ typedef MLAN_PACK_START struct
 
 /*  IEEE IBSS DFS Element (7.3.2.24) */
 /**
- *  IBSS DFS element included in ad hoc beacons and probe responses.  
+ *  IBSS DFS element included in ad hoc beacons and probe responses.
  *    Provides information regarding the IBSS DFS Owner as well as the
  *    originating STAs supported channels and basic measurement results.
  */
@@ -1106,7 +1166,7 @@ typedef MLAN_PACK_START struct
 /* 802.11h BSS information kept for each BSSID received in scan results */
 /**
  * IEEE BSS information needed from scan results for later processing in
- *    join commands 
+ *    join commands
  */
 typedef struct
 {
@@ -1136,7 +1196,7 @@ typedef struct
 
 /**
  *  IOCTL SSID List sub-structure sent in wlan_ioctl_user_scan_cfg
- * 
+ *
  *  Used to specify SSID specific filters as well as SSID pattern matching
  *    filters for scan result processing in firmware.
  */
@@ -1171,7 +1231,7 @@ typedef MLAN_PACK_START struct _wlan_user_scan_chan
 /**
  *  Input structure to configure an immediate scan cmd to firmware
  *
- *  Specifies a number of parameters to be used in general for the scan 
+ *  Specifies a number of parameters to be used in general for the scan
  *    as well as a channel list (wlan_user_scan_chan) for each scan period
  *    desired.
  */
@@ -1192,7 +1252,7 @@ typedef MLAN_PACK_START struct
      *
      *   - MLAN_SCAN_MODE_BSS  (infrastructure)
      *   - MLAN_SCAN_MODE_IBSS (adhoc)
-     *   - MLAN_SCAN_MODE_ANY  (unrestricted, adhoc and infrastructure)        
+     *   - MLAN_SCAN_MODE_ANY  (unrestricted, adhoc and infrastructure)
      */
     t_u8 bss_mode;
     /**
@@ -1246,10 +1306,10 @@ typedef MLAN_PACK_START struct
     t_u16 action;
     /** enable/disable */
     t_u8 enable;
-    /**  BSS type: 
+    /**  BSS type:
       *   MLAN_SCAN_MODE_BSS  (infrastructure)
       *   MLAN_SCAN_MODE_IBSS (adhoc)
-      *   MLAN_SCAN_MODE_ANY  (unrestricted, adhoc and infrastructure)        
+      *   MLAN_SCAN_MODE_ANY  (unrestricted, adhoc and infrastructure)
       */
     t_u8 bss_type;
     /** number of channel scanned during each scan */
