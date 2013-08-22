@@ -792,21 +792,20 @@ wlan_cmd_802_11_key_material(IN pmlan_private pmpriv,
         pkey_material->key_param_set.key_type_id =
             wlan_cpu_to_le16(KEY_TYPE_ID_AES);
         if (cmd_oid == KEY_INFO_ENABLED)
-            pkey_material->key_param_set.key_info =
-                wlan_cpu_to_le16(KEY_INFO_AES_ENABLED);
+            pkey_material->key_param_set.key_info = KEY_INFO_AES_ENABLED;
         else
-            pkey_material->key_param_set.key_info =
-                !(wlan_cpu_to_le16(KEY_INFO_AES_ENABLED));
+            pkey_material->key_param_set.key_info = 0;
 
         if (pkey->key_index & MLAN_KEY_INDEX_UNICAST)   /* AES pairwise key:
                                                            unicast */
-            pkey_material->key_param_set.key_info |=
-                wlan_cpu_to_le16(KEY_INFO_AES_UNICAST);
-        else {                  /* AES group key: multicast */
+            pkey_material->key_param_set.key_info |= KEY_INFO_AES_UNICAST;
+        else                   /* AES group key: multicast */
+            pkey_material->key_param_set.key_info |= KEY_INFO_AES_MCAST;
 
-            pkey_material->key_param_set.key_info |=
-                wlan_cpu_to_le16(KEY_INFO_AES_MCAST);
-        }
+        /** pass key index to BIT(6) and BIT(7)	*/
+        pkey_material->key_param_set.key_info |= (pkey->key_index & 0x03) << 6;
+        PRINTM(MCMND,"key info=0x%x, key_index=0x%x\n", pkey_material->key_param_set.key_info, pkey->key_index);
+		pkey_material->key_param_set.key_info =  wlan_cpu_to_le16(pkey_material->key_param_set.key_info);
     } else if ((pkey->key_flags & KEY_FLAG_AES_MCAST_IGTK) &&
                pkey->key_len == WPA_IGTK_KEY_LEN) {
         PRINTM(MCMND, "WPA_AES_CMAC\n");
@@ -825,16 +824,16 @@ wlan_cmd_802_11_key_material(IN pmlan_private pmpriv,
         PRINTM(MCMND, "WPA_TKIP\n");
         pkey_material->key_param_set.key_type_id =
             wlan_cpu_to_le16(KEY_TYPE_ID_TKIP);
-        pkey_material->key_param_set.key_info =
-            wlan_cpu_to_le16(KEY_INFO_TKIP_ENABLED);
-
+        pkey_material->key_param_set.key_info = KEY_INFO_TKIP_ENABLED;
         if (pkey->key_index & MLAN_KEY_INDEX_UNICAST)   /* TKIP pairwise key:
                                                            unicast */
-            pkey_material->key_param_set.key_info |=
-                wlan_cpu_to_le16(KEY_INFO_TKIP_UNICAST);
+            pkey_material->key_param_set.key_info |= KEY_INFO_TKIP_UNICAST;
         else                    /* TKIP group key: multicast */
-            pkey_material->key_param_set.key_info |=
-                wlan_cpu_to_le16(KEY_INFO_TKIP_MCAST);
+            pkey_material->key_param_set.key_info |= KEY_INFO_TKIP_MCAST;
+        /** pass key index to BIT(6) and BIT(7)	*/
+        pkey_material->key_param_set.key_info |= (pkey->key_index & 0x03) << 6;
+        PRINTM(MCMND,"key info=0x%x, key_index=0x%x\n", pkey_material->key_param_set.key_info, pkey->key_index);
+        pkey_material->key_param_set.key_info =  wlan_cpu_to_le16(pkey_material->key_param_set.key_info);
     }
 
     if (pkey_material->key_param_set.key_type_id) {

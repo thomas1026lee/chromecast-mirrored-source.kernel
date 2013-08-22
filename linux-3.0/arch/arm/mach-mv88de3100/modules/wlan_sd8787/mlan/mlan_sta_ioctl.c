@@ -2792,7 +2792,7 @@ wlan_sec_ioctl_set_wpa_key(IN pmlan_adapter pmadapter,
     if (memcmp
         (pmadapter, sec->param.encrypt_key.mac_addr, broadcast_mac_addr,
          MLAN_MAC_ADDR_LENGTH))
-        sec->param.encrypt_key.key_index = MLAN_KEY_INDEX_UNICAST;
+        sec->param.encrypt_key.key_index |= MLAN_KEY_INDEX_UNICAST;
 
     if (remove_key == MTRUE) {
         /* Send request to firmware */

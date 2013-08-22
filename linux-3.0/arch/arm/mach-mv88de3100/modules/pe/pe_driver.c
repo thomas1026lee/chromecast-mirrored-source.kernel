@@ -101,7 +101,6 @@ static int dhub_init_flag =0;
 
 #define PE_DEVICE_PROCFILE_STATUS           "status"
 #define PE_DEVICE_PROCFILE_DETAIL           "detail"
-static int vpp_fatal_err = 0;
 
 #define MV_BERLIN_CPU0                      0
 #define PE_MODULE_MSG_ID_VPP                MV_GS_VPP_Serv
@@ -342,7 +341,7 @@ typedef struct pe_message_queue {
 
 } PEMsgQ_t;
 
-#define VPP_ISR_MSGQ_SIZE           8
+#define VPP_ISR_MSGQ_SIZE          32
 
 static PEMsgQ_t hPEMsgQ;
 
@@ -1214,7 +1213,6 @@ static irqreturn_t pe_devices_vpp_isr(int irq, void *dev_id)
 		if(ret != S_OK) {
 			if (!atomic_read(&vpp_isr_msg_err_cnt)) {
 				pe_error(" E/[vpp isr] MsgQ full, task deadlock or segment fault\n");
-				vpp_fatal_err = 1;
 			}
 			atomic_inc(&vpp_isr_msg_err_cnt);
 			return IRQ_HANDLED;
@@ -2496,7 +2494,7 @@ static long pe_driver_ioctl_unlocked(struct file *filp, unsigned int cmd,
 
 			PEMsgQ_DequeueRead(&hPEMsgQ, &msg);
 
-			if (!atomic_read(&vpp_isr_msg_err_cnt)) {
+			if (atomic_read(&vpp_isr_msg_err_cnt)) {
 				// msgQ get full, if isr task can run here, reset msgQ
 				//fullness--;
 				//PEMsgQ_Dequeue(&hPEMsgQ, fullness);
@@ -2776,6 +2774,10 @@ static int read_proc_status(char *page, char **start, off_t offset,
 {
 	int len = 0;
 	int cnt;
+	int vpp_fatal_err = 0;
+
+	if(atomic_read(&vpp_isr_msg_err_cnt))
+		vpp_fatal_err = 1;
 
 	len += snprintf(page + len, count, "PE_Module_IRQ_cnt: %d\n", vpp_cpcb0_vbi_int_cnt);
 
@@ -2866,7 +2868,6 @@ static int __init pe_driver_init(void)
 			       read_proc_status, NULL);
 	create_proc_read_entry(PE_DEVICE_PROCFILE_DETAIL, 0, pe_driver_procdir,
 			       read_proc_detail, NULL);
-	vpp_fatal_err = 0;
 
 	res = pe_agent_driver_init();
 	if (res != 0)
