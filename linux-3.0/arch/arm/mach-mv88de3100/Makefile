@@ -1,11 +1,5 @@
 include $(src)/mv88de3100.mk
 
-# TODO(kolla): Remove this hack once Marvell resolves the
-# optimization issue with kernel modules. b/8081260
-# Marvell modules crash the CPU when -O2 is enabled, so
-# override -O2 for these modules with -Os.
-subdir-ccflags-y := -Os
-
 obj-y := core.o irq.o time.o platform_devs.o clock.o mv88de31xx_android.o
 
 ifndef CONFIG_MV88DE3100_GPIO

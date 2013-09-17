@@ -7,7 +7,7 @@ trap 'echo Fatal error: script $0 aborting at line $LINENO, command \"$BASH_COMM
 # List of files to be copied to Eureka build
 declare -a \
     COPY_FILE_LIST=(arch/arm/boot/uImage:kernel
-                    arch/arm/boot/zImage:kernel
+                    arch/arm/boot/zImage-dtb.berlin2cd-dongle:kernel/zImage
                     COPYING:kernel
                     tools/perf/perf:sdk/bin
                    )
@@ -31,7 +31,7 @@ function run_kernel_make(){
 
 function run_perf_make(){
     echo "***** building perf *****"
-    CROSS_COMPILE=$1 NO_DWARF=1 make -j$2
+    CROSS_COMPILE=$1 ARCH=$2 NO_DWARF=1 make -j$3
     echo "***** completed building perf *****"
 }
 
@@ -48,13 +48,14 @@ function build_kernel(){
     diff .config arch/arm/configs/$kernel_config
     # Build kernel
     run_kernel_make $cross_compile $cpu_num $arch uImage
+    run_kernel_make $cross_compile $cpu_num $arch zImage-dtb.berlin2cd-dongle
     cd -
 }
 
 function build_perf(){
     local kernel_dir=$(readlink -f $1)
     cd ${kernel_dir}/tools/perf
-    run_perf_make $cross_compile $cpu_num
+    run_perf_make $cross_compile $arch $cpu_num
     cd -
 }
 
@@ -98,7 +99,7 @@ else
   exit 1
 fi
 
-kernel_dir=linux-3.0
+kernel_dir=linux-3.8
 # Build kernel
 build_kernel $kernel_dir
 

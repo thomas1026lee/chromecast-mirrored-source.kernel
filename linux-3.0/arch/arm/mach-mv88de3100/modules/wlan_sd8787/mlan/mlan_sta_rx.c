@@ -145,7 +145,7 @@ int mlan_hist_data_get(char *pBuf, unsigned int *pNumSamples)
 {
 	char *d = pBuf;
 	char *s;
-	t_u32 temp;
+	unsigned int temp;
 	int ix, dest_ix = 0;
 	if (pmlan_hist)
 	{
@@ -153,26 +153,26 @@ int mlan_hist_data_get(char *pBuf, unsigned int *pNumSamples)
 		for (ix = 0; ix < RX_RATE_MAX; ix++){
 			temp = atomic_read(&(pmlan_hist->rx_rate[ix]));
 			s = &temp;
-			mlan_memcpy((void *) (pBuf + dest_ix), (void *) s, 4);
-			dest_ix += 4;
+			mlan_memcpy((void *) (pBuf + dest_ix), (void *) s, sizeof(unsigned int));
+			dest_ix += sizeof(unsigned int);
 		}
 		for (ix = 0; ix < SNR_MAX; ix++){
 			temp = atomic_read(&(pmlan_hist->snr[ix]));
 			s = &temp;
-			mlan_memcpy((void *) (pBuf + dest_ix), (void *) s, 4);
-			dest_ix += 4;
+			mlan_memcpy((void *) (pBuf + dest_ix), (void *) s, sizeof(unsigned int));
+			dest_ix += sizeof(unsigned int);
 		}
 		for (ix = 0; ix < NOISE_FLR_MAX; ix++){
 			temp = atomic_read(&(pmlan_hist->noise_flr[ix]));
 			s = &temp;
-			mlan_memcpy((void *) (pBuf + dest_ix), (void *) s, 4);
-			dest_ix += 4;
+			mlan_memcpy((void *) (pBuf + dest_ix), (void *) s, sizeof(unsigned int));
+			dest_ix += sizeof(unsigned int);
 		}
 		for (ix = 0; ix < SIG_STRENGTH_MAX; ix++){
 			temp = atomic_read(&(pmlan_hist->sig_str[ix]));
 			s = &temp;
-			mlan_memcpy((void *) (pBuf + dest_ix), (void *) s, 4);
-			dest_ix += 4;
+			mlan_memcpy((void *) (pBuf + dest_ix), (void *) s, sizeof(unsigned int));
+			dest_ix += sizeof(unsigned int);
 		}
 		return 0;
 	}
