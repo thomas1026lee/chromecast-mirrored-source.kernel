@@ -10,13 +10,18 @@ declare -a \
                     arch/arm/boot/zImage-dtb.berlin2cd-dongle:kernel/zImage
                     COPYING:kernel
                     tools/perf/perf:sdk/bin
+                    vmlinux:kernel
                    )
 
 
 # Kernel configuration for Eureka
 kernel_config=''
 arch=arm
-cross_compile=arm-unknown-linux-gnueabi-
+if [[ -e ../prebuilt/toolchain/armv7a/bin/armv7a-cros-linux-gnueabi-gcc ]]; then
+    cross_compile=armv7a-cros-linux-gnueabi-
+else
+    cross_compile=arm-unknown-linux-gnueabi-
+fi
 cpu_num=$(grep -c processor /proc/cpuinfo)
 
 function usage(){
@@ -31,6 +36,7 @@ function run_kernel_make(){
 
 function run_perf_make(){
     echo "***** building perf *****"
+    LDFLAGS='-static-libgcc -static-libstdc++' \
     CROSS_COMPILE=$1 ARCH=$2 NO_DWARF=1 make -j$3
     echo "***** completed building perf *****"
 }
