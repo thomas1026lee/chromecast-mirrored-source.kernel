@@ -906,6 +906,13 @@ static pe_irq_profiler_t pe_irq_profiler;
 
 static atomic_t vpp_isr_msg_err_cnt = ATOMIC_INIT(0);
 
+#define HPD_DEBOUNCE
+
+#ifdef  HPD_DEBOUNCE
+#define HPD_DELAY_CNT (6)
+static int hpd_debounce_delaycnt = 0;
+#endif
+
 static irqreturn_t pe_devices_vpp_isr(int irq, void *dev_id)
 {
 	INT instat;
@@ -1103,17 +1110,28 @@ static irqreturn_t pe_devices_vpp_isr(int irq, void *dev_id)
                 (vpp_intr_status[avioDhubSemMap_vpp_vppOUT3_intr])
 #endif
 		) {
+#ifdef  HPD_DEBOUNCE
+		hpd_debounce_delaycnt = HPD_DELAY_CNT;
+		bCLR(instat, avioDhubSemMap_vpp_vppOUT3_intr);
+#else
 #ifdef NEW_ISR
 		vpp_intr |= bSETMASK(avioDhubSemMap_vpp_vppOUT3_intr);
 #else
 		vpp_intr = 1;
 #endif
+#endif
+
 		bSET(instat_used, avioDhubSemMap_vpp_vppOUT3_intr);
 
 		/* VOUT3 interrupt */
 		/* clear interrupt */
 		semaphore_pop(pSemHandle, avioDhubSemMap_vpp_vppOUT3_intr, 1);
 		semaphore_clr_full(pSemHandle, avioDhubSemMap_vpp_vppOUT3_intr);
+#ifdef  HPD_DEBOUNCE
+		// disable interrupt
+		semaphore_intr_enable(pSemHandle, avioDhubSemMap_vpp_vppOUT3_intr,
+		0/*empty*/, 0/*full*/, 0/*almost empty*/, 0/*almost full*/, 0/*cpu id*/);
+#endif
 	}
 
 #if (BERLIN_CHIP_VERSION != BERLIN_BG2CD_A0)
@@ -1196,6 +1214,28 @@ static irqreturn_t pe_devices_vpp_isr(int irq, void *dev_id)
 #endif
 
 	if (vpp_intr) {
+#ifdef  HPD_DEBOUNCE
+        if(hpd_debounce_delaycnt)
+        {
+            if (bTST(instat, avioDhubSemMap_vpp_vppCPCB0_intr))
+            { // use display interrupt as debounce counter.
+                hpd_debounce_delaycnt--;
+            }
+            if(hpd_debounce_delaycnt == 0)
+            {
+                semaphore_clr_full(pSemHandle, avioDhubSemMap_vpp_vppOUT3_intr);
+                // enable interrupt
+                semaphore_intr_enable(pSemHandle, avioDhubSemMap_vpp_vppOUT3_intr,
+                  0/*empty*/, 1/*full*/, 0/*almost empty*/, 0/*almost full*/, 0/*cpu id*/);
+#ifdef NEW_ISR
+                vpp_intr |= bSETMASK(avioDhubSemMap_vpp_vppOUT3_intr);
+#else
+                vpp_intr = 1;
+#endif
+                bSET(instat, avioDhubSemMap_vpp_vppOUT3_intr);
+            }
+        }
+#endif
 #if CONFIG_VPP_IOCTL_MSG
 
 #if CONFIG_VPP_ISR_MSGQ
@@ -1210,6 +1250,7 @@ static irqreturn_t pe_devices_vpp_isr(int irq, void *dev_id)
  		spin_lock(&msgQ_spinlock);
 		ret = PEMsgQ_Add(&hPEMsgQ, &msg);
 		spin_unlock(&msgQ_spinlock);
+
 		if(ret != S_OK) {
 			if (!atomic_read(&vpp_isr_msg_err_cnt)) {
 				pe_error(" E/[vpp isr] MsgQ full, task deadlock or segment fault\n");
