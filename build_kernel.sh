@@ -6,11 +6,14 @@ trap 'echo Fatal error: script $0 aborting at line $LINENO, command \"$BASH_COMM
 
 # List of files to be copied to Eureka build
 declare -a \
-    COPY_FILE_LIST=(arch/arm/boot/uImage:kernel
-                    arch/arm/boot/zImage-dtb.berlin2cd-dongle:kernel/zImage
+    COPY_FILE_LIST=(arch/arm/boot/uImage-8787:kernel/uImage
+                    arch/arm/boot/uImage-8801:kernel/uImage-8801
+                    arch/arm/boot/zImage-dtb.berlin2cd-dongle-8787:kernel/zImage
+                    arch/arm/boot/zImage-dtb.berlin2cd-dongle-8801:kernel/zImage-8801
                     COPYING:kernel
                     tools/perf/perf:sdk/bin
-                    vmlinux:kernel
+                    vmlinux-8787:kernel/vmlinux
+                    vmlinux-8801:kernel/vmlinux-8801
                    )
 
 
@@ -52,9 +55,27 @@ function build_kernel(){
     run_kernel_make $cross_compile $cpu_num $arch $kernel_config
     # Verify kernel config
     diff .config arch/arm/configs/$kernel_config
-    # Build kernel
+
+    # Build (default) kernel with sd8787
     run_kernel_make $cross_compile $cpu_num $arch uImage
     run_kernel_make $cross_compile $cpu_num $arch zImage-dtb.berlin2cd-dongle
+    mv arch/arm/boot/uImage arch/arm/boot/uImage-8787
+    mv arch/arm/boot/zImage-dtb.berlin2cd-dongle arch/arm/boot/zImage-dtb.berlin2cd-dongle-8787
+    mv vmlinux vmlinux-8787
+
+    # Build kernel with sd8801
+    # Modify .config
+    sed -e 's/# CONFIG_BERLIN_SDIO_WLAN_8801 is not set/CONFIG_BERLIN_SDIO_WLAN_8801=y/'\
+        -e 's/CONFIG_BERLIN_SDIO_WLAN_8787=y/# CONFIG_BERLIN_SDIO_WLAN_8787 is not set/'\
+        .config > .config.8801
+    cp .config.8801 .config
+
+    run_kernel_make $cross_compile $cpu_num $arch uImage
+    run_kernel_make $cross_compile $cpu_num $arch zImage-dtb.berlin2cd-dongle
+    mv arch/arm/boot/uImage arch/arm/boot/uImage-8801
+    mv arch/arm/boot/zImage-dtb.berlin2cd-dongle arch/arm/boot/zImage-dtb.berlin2cd-dongle-8801
+    mv vmlinux vmlinux-8801
+
     cd -
 }
 
